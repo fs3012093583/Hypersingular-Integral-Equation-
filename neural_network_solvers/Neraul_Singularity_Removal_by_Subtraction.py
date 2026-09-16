@@ -35,7 +35,7 @@ def get_gauss_points(n=128, device='cpu'):
     return nodes_t, weights_t
 
 # 3. 核心损失函数：显式极限值填充版
-def singular_loss(model, x_collo, nodes, weights, eps=1e-2):
+def singular_loss(model, x_collo, nodes, weights, eps=1e-1):
     """ 
     x_collo: (N, 1), nodes: (M, 1)
     """

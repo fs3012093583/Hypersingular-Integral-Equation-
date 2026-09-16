@@ -1,0 +1,30 @@
+{
+  "updated_at": "2026-09-16T23:49:00+08:00",
+  "current_focus": "Completed Taylor-subtraction PINN validation for the constant hypersingular test equation",
+  "priority": "high",
+  "urgency": "medium",
+  "importance": "high",
+  "blocking_issues": [],
+  "local_code_state": {
+    "repo": "/Users/a/Projects/Hypersingular Integral Equation,",
+    "branch": "main",
+    "dirty_before_task": true,
+    "preserve_user_files": [
+      "neural_network_solvers/Neraul_Singularity_Removal_by_Subtraction.py",
+      "neural_network_solvers/neural_solver_ln2_approx.py"
+    ]
+  },
+  "remote_code_state": null,
+  "data_state": {
+    "dataset": null,
+    "manufactured_solution": "u(t)=1"
+  },
+  "latest_verification": {
+    "tests": "4 passed",
+    "max_abs_solution_error": 0.00012120315023189665,
+    "rms_solution_error": 0.000023792242384259994,
+    "validation_num_quadrature": 192,
+    "rms_equation_residual": 0.0007099906406396513
+  },
+  "next": "Await approval before extending to the parameterized a(t), b(t), gamma equation"
+}
