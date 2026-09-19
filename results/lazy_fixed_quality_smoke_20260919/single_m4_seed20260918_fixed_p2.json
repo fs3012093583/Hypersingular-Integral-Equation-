@@ -1,0 +1,91 @@
+{
+  "experiment": "sequential_tolerance_end_to_end",
+  "method": "fixed_p2",
+  "status": "ok",
+  "config": {
+    "representation": "fixed_p2",
+    "order": 4,
+    "family": "exp",
+    "coupling": 0.05,
+    "nonlinear_coefficient": 0.0,
+    "seed": 20260918,
+    "steps": 3,
+    "lbfgs_steps": 1,
+    "learning_rate": 0.002,
+    "width": 8,
+    "hidden_layers": 1,
+    "collocation_points": 6,
+    "training_quadrature_points": 12,
+    "rhs_quadrature_points": 32,
+    "validation_points": 25,
+    "validation_quadrature_points": 32,
+    "collocation_limit": 0.95,
+    "validation_limit": 0.98,
+    "max_continuation_order": 3,
+    "target_error": 0.001,
+    "target_residual_error": 0.0001,
+    "derivative_envelope_safety": 4.0,
+    "envelope_refresh_interval": 2,
+    "envelope_calibration_points": 9,
+    "selector_batch_size": 48,
+    "derivative_metrics_path": "results/neural_high_order_derivatives/metrics.json",
+    "rhs_continuation_order": 3,
+    "dtype": "float64",
+    "device": "cpu",
+    "timing_repeats": 1
+  },
+  "initial_model_fingerprint": "e4153ffd4554c6872f13955392b8ba43985d3e336f27654c5b047bbe03d036da",
+  "parameter_count": 25,
+  "final_training_loss": 1.3546065435781312,
+  "loss_history": [
+    {
+      "stage": "adam",
+      "step": 1,
+      "loss": 2.6077502244173294
+    },
+    {
+      "stage": "adam",
+      "step": 3,
+      "loss": 2.5409323598159546
+    },
+    {
+      "stage": "lbfgs",
+      "step": 2,
+      "loss": 1.3546065435781312
+    }
+  ],
+  "lbfgs_closure_calls": 2,
+  "solution_rmse_closed_interval": 1.2463940422938988,
+  "solution_max_abs_error_closed_interval": 2.580866585061614,
+  "validation_residual_rmse": 1.1906975179163017,
+  "residual_interval": [
+    -0.98,
+    0.98
+  ],
+  "training_seconds_including_envelope_refresh": 0.015437459005624987,
+  "method_setup_seconds": 5.00003807246685e-07,
+  "method_setup_and_training_seconds": 0.015437959009432234,
+  "solve_seconds_before_validation": 0.01661508300458081,
+  "ad_calibration_source": null,
+  "end_to_end_seconds": 0.028364957994199358,
+  "post_training_cost": {
+    "median_residual_forward_backward_seconds": 0.004157041999860667,
+    "median_saved_tensor_payload_bytes": 124080
+  },
+  "selection_diagnostics": null,
+  "derivative_error_scaled_envelope": null,
+  "online_derivative_envelope_refreshes": null,
+  "online_derivative_envelope_refresh_seconds": 0.0,
+  "task": "single",
+  "fixed_p2_geometry": {
+    "fixed_p2_threshold": 0.011609330383882413,
+    "near_pairs": 0,
+    "total_pairs": 72,
+    "near_rows": 0,
+    "total_rows": 6,
+    "minimum_distance": 0.013512278604139949
+  },
+  "solution_rmse": 1.2463940422938988,
+  "residual_rmse": 1.1906975179163017,
+  "saved_tensor_payload_bytes": 124080
+}

@@ -1,0 +1,18 @@
+\begin{table}[H]
+\centering
+\caption{三随机种子的解误差与计算成本（均值$\pm$样本标准差，载荷为均值）\\Paired solution errors and costs over three seeds (mean$\pm$sample standard deviation).}
+\label{tab:operator-budget-seeds}
+\small
+\begin{tabular}{clrrr}
+\toprule
+$m$ & 方法 & 闭区间解 RMSE & 准备+训练 (s) & 保存张量 (MiB) \\
+\midrule
+4 & 全行固定 $p=2$ & $(4.796\pm2.381)\times10^{-4}$ & $17.69\pm0.92$ & 34.59 \\
+4 & 按需固定 $p=2$ & $(4.765\pm2.340)\times10^{-4}$ & $17.67\pm0.27$ & 25.37 \\
+4 & 算子预算 & $(3.925\pm1.668)\times10^{-4}$ & $5.68\pm0.12$ & 4.20 \\
+6 & 全行固定 $p=2$ & $(1.804\pm0.140)\times10^{-3}$ & $154.64\pm8.34$ & 291.28 \\
+6 & 按需固定 $p=2$ & $(1.873\pm0.082)\times10^{-3}$ & $156.05\pm8.43$ & 291.31 \\
+6 & 算子预算 & $(2.115\pm0.558)\times10^{-3}$ & $67.00\pm3.62$ & 88.84 \\
+\bottomrule
+\end{tabular}
+\end{table}

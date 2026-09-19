@@ -1,0 +1,200 @@
+\documentclass[UTF8,fontset=none,11pt,a4paper]{ctexart}
+\usepackage[left=2.25cm,right=2.25cm,top=2.35cm,bottom=2.35cm]{geometry}
+\usepackage{amsmath,amssymb,booktabs,array,graphicx,xcolor,hyperref,fancyhdr,enumitem,float}
+\setCJKmainfont{Songti SC}
+\setCJKsansfont{PingFang SC}
+\setmainfont{Times New Roman}
+\hypersetup{colorlinks=true,linkcolor=blue!45!black,urlcolor=blue!45!black}
+\graphicspath{{figures/}}
+\setlength{\parindent}{2em}
+\setlength{\parskip}{0.28em}
+\setlist{nosep,leftmargin=2em}
+\pagestyle{plain}
+\newcommand{\Hcorr}{\mathcal H_{\mathrm{corr}}}
+\newcommand{\Hunc}{\mathcal H_{\mathrm{unc}}}
+
+\title{\bfseries 超奇异积分方程神经网络求解阶段性实验报告\\[0.45em]
+\large 修正版与未修正版有限部分算子的对照}
+% \author{课题组阶段性汇报}
+% \date{2026年9月17日}
+
+\begin{document}
+\maketitle
+
+% \begin{abstract}
+% 本阶段研究物理信息神经网络求解 Hadamard 有限部分超奇异积分方程的方法，重点考察二阶极点核在数值计算中的正则化处理。根据组会讨论的推导，分别采用完整 Taylor 减除公式和未补充边界修正项的导数差商公式进行训练，并在两个具有解析解的算例上比较结果。第一题的精确解为常数 $u(t)=1$，未修正版得到的解均方根误差为 $1.0011\times10^{-4}$，约为修正版的 4.21 倍。第二题的精确解为 $u_\gamma(t)=1+\gamma t$，在六个参数值上，未修正版的解误差均大于修正版，误差倍数为 1.99 至 15.98。当前两个算例的解析解都是仿射函数，两种公式在解析解上恰好一致，因此这组结果主要反映两种公式的数值稳定性差异。下一阶段将引入含二次项的解析解，进一步考察遗漏边界修正项造成的系统偏差。
+% \end{abstract}
+
+\section{问题}
+
+考虑区间 $(-1,1)$ 上的 Hadamard 有限部分积分
+\begin{equation}
+\mathcal H[u](t)=\operatorname{f.p.}\!\int_{-1}^{1}
+\frac{u(\tau)}{(\tau-t)^2}\,\mathrm d\tau .
+\end{equation}
+积分核在 $\tau=t$ 处具有二阶极点，不能直接采用普通数值积分。本阶段将正则化后的积分公式写入神经网络损失函数，并通过自动微分计算 $u'(t)$ 和 $u''(t)$，以避免在奇点附近进行截断。
+
+完整 Taylor 减除公式为
+\begin{align}
+\Hcorr[u](t)
+={}&-u(t)\left(\frac{1}{1-t}+\frac{1}{1+t}\right)
++u'(t)\ln\frac{1-t}{1+t}\nonumber\\
+&+\int_{-1}^{1}
+\frac{u(\tau)-u(t)-u'(t)(\tau-t)}{(\tau-t)^2}\,\mathrm d\tau .
+\end{align}
+被积函数在对角位置的连续极限为 $u''(t)/2$。
+
+未补充边界修正项的公式为
+\begin{align}
+\Hunc[u](t)
+={}&-u(t)\left(\frac{1}{1-t}+\frac{1}{1+t}\right)
++u'(t)\ln\frac{1-t}{1+t}\nonumber\\
+&+\int_{-1}^{1}\frac{u'(\tau)-u'(t)}{\tau-t}\,\mathrm d\tau ,
+\end{align}
+其对角位置取 $u''(t)$。对 Taylor 余项进行分部积分可得
+\begin{equation}
+\Hunc[u](t)-\Hcorr[u](t)=
+\frac{u(1)-u(t)}{1-t}+\frac{u(-1)-u(t)}{1+t}.
+\end{equation}
+两种公式对一般函数并不等价。对于常数和一次函数，右端为零；对于 $u(t)=t^2$，右端恒等于 2。
+
+\section{算例与计算设置}
+
+第一题为
+\begin{equation}
+\operatorname{f.p.}\!\int_{-1}^{1}\frac{u(\tau)}{(\tau-t)^2}\,\mathrm d\tau
+=\frac{2}{(t-1)(t+1)},\qquad -1<t<1,
+\end{equation}
+解析解为 $u(t)=1$。
+
+第二题为
+\begin{equation}
+a(t)u(t)+b(t)\operatorname{f.p.}\!\int_{-1}^{1}
+\frac{u(\tau)}{(\tau-t)^2}\,\mathrm d\tau=f_\gamma(t),
+\end{equation}
+其中
+\begin{equation}
+a(t)=t^4,\qquad b(t)=(2-t)(1+t),\qquad u_\gamma(t)=1+\gamma t,
+\end{equation}
+参数取 $\gamma=0,0.1,0.5,1,5,10$。
+
+神经网络采用三层全连接结构，每个隐藏层含 32 个神经元，激活函数为 $\tanh$。计算使用双精度浮点数。训练点采用余弦分布，积分采用 Gauss--Legendre 求积。
+
+\begin{table}[H]
+\centering
+\caption{主要计算参数}
+\begin{tabular}{lcc}
+\toprule
+设置 & 第一题 & 第二题\\
+\midrule
+Adam & 3000步，$2\times10^{-3}$ & 3000步，$2\times10^{-3}$\\
+L-BFGS & 300步 & 最大迭代400步\\
+配置点 & 96个 & 96个\\
+训练求积 & 96点 & 96点\\
+结果检验求积 & 192点 & 192点\\
+训练点区间 & $[-0.95,0.95]$ & $[-0.95,0.95]$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+训练时对残差作尺度归一化，以减小端点附近系数增长对优化过程的影响。下文列出的方程残差均恢复到原方程尺度，并使用 192 点求积重新计算。
+
+\section{第一题计算结果}
+
+\begin{table}[H]
+\centering
+\caption{第一题修正版和未修正版结果}
+\begin{tabular}{lrr}
+\toprule
+指标 & 修正版 & 未修正版\\
+\midrule
+最终归一化损失 & $2.4593\times10^{-8}$ & $2.0561\times10^{-8}$\\
+解的均方根误差 & $2.3792\times10^{-5}$ & $1.0011\times10^{-4}$\\
+解的最大绝对误差 & $1.2120\times10^{-4}$ & $2.0889\times10^{-4}$\\
+按训练公式计算的残差均方根 & $7.0999\times10^{-4}$ & $6.3997\times10^{-4}$\\
+按训练公式计算的最大残差 & $3.9773\times10^{-3}$ & $4.0253\times10^{-3}$\\
+未修正版结果在完整公式下的残差 & --- & $7.2352\times10^{-4}$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+未修正版的最终训练损失略小，但解的均方根误差达到修正版的 4.21 倍。两种损失对应的积分算子不同，训练损失的数值大小不能直接用于判断解的优劣。以解析解误差作为统一标准后，修正版的精度更高。
+
+将未修正版得到的近似解放回完整公式计算，残差由 $6.3997\times10^{-4}$ 增至 $7.2352\times10^{-4}$。这说明未修正版虽然能够拟合自身对应的方程，但对原有限部分积分公式的满足程度有所下降。
+
+\section{第二题计算结果}
+
+\begin{table}[H]
+\centering
+\caption{第二题解的均方根误差}
+\begin{tabular}{rrrr}
+\toprule
+$\gamma$ & 修正版 & 未修正版 & 误差倍数\\
+\midrule
+0 & $8.7450\times10^{-5}$ & $1.9144\times10^{-4}$ & 2.19\\
+0.1 & $1.0159\times10^{-4}$ & $3.3983\times10^{-4}$ & 3.34\\
+0.5 & $2.5984\times10^{-4}$ & $6.8437\times10^{-4}$ & 2.63\\
+1 & $1.6832\times10^{-4}$ & $3.3527\times10^{-4}$ & 1.99\\
+5 & $6.1745\times10^{-3}$ & $1.3975\times10^{-2}$ & 2.26\\
+10 & $3.8989\times10^{-4}$ & $6.2320\times10^{-3}$ & 15.98\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+六个参数点上，未修正版的误差都高于修正版。两种方法在 $\gamma=5$ 时误差均明显增大，说明这一参数附近的优化难度较高。相对差异最大的是 $\gamma=10$，未修正版误差约为修正版的 15.98 倍。
+
+% \clearpage
+\thispagestyle{plain}
+\noindent\rule{0pt}{1pt}\par\vspace{0.2cm}
+\begin{table}[H]
+\centering
+\caption{第二题方程残差均方根}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{rrrr}
+\toprule
+$\gamma$ & 修正版：完整公式 & 未修正版：训练公式 & 未修正版：完整公式\\
+\midrule
+0 & $2.3721\times10^{-4}$ & $2.5715\times10^{-4}$ & $5.3342\times10^{-4}$\\
+0.1 & $3.7705\times10^{-4}$ & $6.6329\times10^{-4}$ & $1.0164\times10^{-3}$\\
+0.5 & $9.8172\times10^{-4}$ & $1.3718\times10^{-3}$ & $2.1279\times10^{-3}$\\
+1 & $4.0873\times10^{-4}$ & $4.1299\times10^{-4}$ & $9.6485\times10^{-4}$\\
+5 & $1.3814\times10^{-2}$ & $1.2607\times10^{-2}$ & $3.9392\times10^{-2}$\\
+10 & $5.8367\times10^{-3}$ & $5.7206\times10^{-3}$ & $2.1925\times10^{-2}$\\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+在 $\gamma=5$ 和 $\gamma=10$ 时，未修正版按自身公式计算的残差略低于修正版，但把结果放回完整公式后，残差明显增大。这个现象与第一题一致：不同公式下的训练残差不能直接比较，解析解误差和完整方程残差更能反映实际求解质量。
+
+\section{结果汇总}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.82\textwidth]{corrected_vs_uncorrected_summary_v3.pdf}
+\caption{两题修正版与未修正版计算结果对比。纵轴采用对数尺度。}
+\end{figure}
+
+本阶段计算表明，完整 Taylor 减除公式可以直接与神经网络和自动微分结合，两个算例均得到较小的解误差。在相同网络和训练设置下，未修正版在第一题及第二题六个参数点上的解误差均较大。未修正版的训练损失有时并不高，但这并不意味着所得近似解更符合原有限部分积分方程。
+
+当前结果只对应本阶段采用的网络、参数和两个算例，尚不能推广到所有超奇异积分方程，也不能替代严格的收敛性分析。
+
+% \section{下一步工作}
+
+% 当前算例的解析解都是仿射函数，边界差异项恰好为零。下一步拟采用
+% \begin{equation}
+% u_{\gamma,\eta}(t)=1+\gamma t+\eta t^2,\qquad \eta\ne0,
+% \end{equation}
+% 构造新的右端项。此时
+% \begin{equation}
+% \Hunc[u_{\gamma,\eta}]-\Hcorr[u_{\gamma,\eta}]=2\eta,
+% \end{equation}
+% 两种公式的差异不再消失，可以直接观察遗漏边界项对近似解的影响。后续还将增加随机初值数量，并比较不同求积点数下的结果，以判断误差差异是否稳定。
+
+% \section*{参考资料}
+% \begin{enumerate}
+% \item 陈梦成：《断裂力学中奇异积分方程的数值求解方法》，《华东交通大学学报》，2010，27(3)。
+% \item I. V. Boykov, E. S. Ventsel, and A. I. Boykova, ``An approximate solution of hypersingular integral equations,'' \textit{Applied Numerical Mathematics}, 60 (2010), 607--628.
+% \item 2026年9月16日组会讨论记录及黑板推导。
+% \end{enumerate}
+
+\end{document}

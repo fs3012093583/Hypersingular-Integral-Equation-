@@ -1,0 +1,163 @@
+{
+  "experiment": "general_cancellation_aware_taylor_pinn",
+  "exact_solution": "exp(t)",
+  "orders": [
+    2,
+    3,
+    4
+  ],
+  "config": {
+    "seed": 20260918,
+    "adam_steps": 1200,
+    "learning_rate": 0.002,
+    "lbfgs_steps": 120,
+    "width": 32,
+    "hidden_layers": 3,
+    "collocation_points": 64,
+    "training_quadrature": 64,
+    "validation_quadrature": 192,
+    "collocation_limit": 0.97,
+    "coupling": 0.05,
+    "continuation_order": 2
+  },
+  "metrics": [
+    {
+      "order": 2,
+      "elapsed_seconds": 6.276592583002639,
+      "parameter_count": 2209,
+      "final_training_loss": 4.155423572601795e-08,
+      "solution_rms_error": 0.0008100664054003923,
+      "solution_max_abs_error": 0.0014223488303952703,
+      "validation_equation_rms": 0.0001831912276987572,
+      "history": [
+        {
+          "stage": "adam",
+          "step": 1,
+          "loss": 1.928990134011527
+        },
+        {
+          "stage": "adam",
+          "step": 200,
+          "loss": 0.0005303503186785215
+        },
+        {
+          "stage": "adam",
+          "step": 400,
+          "loss": 0.00014965509549917056
+        },
+        {
+          "stage": "adam",
+          "step": 600,
+          "loss": 0.00010697349497133826
+        },
+        {
+          "stage": "adam",
+          "step": 800,
+          "loss": 8.7302064439961e-05
+        },
+        {
+          "stage": "adam",
+          "step": 1000,
+          "loss": 7.11865827288683e-05
+        },
+        {
+          "stage": "adam",
+          "step": 1200,
+          "loss": 5.7449853072910026e-05
+        }
+      ]
+    },
+    {
+      "order": 3,
+      "elapsed_seconds": 14.391828125008033,
+      "parameter_count": 2209,
+      "final_training_loss": 3.626787919720152e-08,
+      "solution_rms_error": 7.10933685279053e-05,
+      "solution_max_abs_error": 0.00020619131173632566,
+      "validation_equation_rms": 0.0002038004215267775,
+      "history": [
+        {
+          "stage": "adam",
+          "step": 1,
+          "loss": 1.6219801411199346
+        },
+        {
+          "stage": "adam",
+          "step": 200,
+          "loss": 0.0011310405284106933
+        },
+        {
+          "stage": "adam",
+          "step": 400,
+          "loss": 0.00018797657782734464
+        },
+        {
+          "stage": "adam",
+          "step": 600,
+          "loss": 8.134760281341402e-05
+        },
+        {
+          "stage": "adam",
+          "step": 800,
+          "loss": 3.8925031197049295e-05
+        },
+        {
+          "stage": "adam",
+          "step": 1000,
+          "loss": 2.1287119922391128e-05
+        },
+        {
+          "stage": "adam",
+          "step": 1200,
+          "loss": 1.4293006862767499e-05
+        }
+      ]
+    },
+    {
+      "order": 4,
+      "elapsed_seconds": 37.11415179200412,
+      "parameter_count": 2209,
+      "final_training_loss": 2.2051497931305453e-08,
+      "solution_rms_error": 7.60124456013532e-05,
+      "solution_max_abs_error": 0.000503702638674941,
+      "validation_equation_rms": 0.00014189113014298274,
+      "history": [
+        {
+          "stage": "adam",
+          "step": 1,
+          "loss": 2.045731032985902
+        },
+        {
+          "stage": "adam",
+          "step": 200,
+          "loss": 0.001713528391610299
+        },
+        {
+          "stage": "adam",
+          "step": 400,
+          "loss": 0.0003880612177088022
+        },
+        {
+          "stage": "adam",
+          "step": 600,
+          "loss": 9.904560053912141e-05
+        },
+        {
+          "stage": "adam",
+          "step": 800,
+          "loss": 5.847532986138989e-05
+        },
+        {
+          "stage": "adam",
+          "step": 1000,
+          "loss": 4.308552136727819e-05
+        },
+        {
+          "stage": "adam",
+          "step": 1200,
+          "loss": 3.26199003155763e-05
+        }
+      ]
+    }
+  ]
+}

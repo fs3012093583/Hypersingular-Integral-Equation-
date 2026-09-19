@@ -1,0 +1,108 @@
+{
+  "experiment": "parameterized_operator_budget_benchmark",
+  "status": "ok",
+  "method": "lazy_fixed_p2",
+  "config": {
+    "representation": "lazy_fixed_p2",
+    "order": 4,
+    "coupling": 0.05,
+    "seed": 20260918,
+    "steps": 2,
+    "lbfgs_steps": 1,
+    "learning_rate": 0.002,
+    "width": 8,
+    "hidden_layers": 1,
+    "collocation_points": 6,
+    "training_quadrature_points": 12,
+    "rhs_quadrature_points": 32,
+    "validation_points": 21,
+    "validation_quadrature_points": 32,
+    "collocation_limit": 0.95,
+    "validation_limit": 0.98,
+    "training_parameters": [
+      0.5,
+      1.0,
+      1.5
+    ],
+    "validation_parameters": [
+      0.625,
+      0.875,
+      1.125,
+      1.375
+    ],
+    "max_continuation_order": 3,
+    "target_residual_error": 0.0001,
+    "derivative_envelope_safety": 4.0,
+    "derivative_error_safety": 8.0,
+    "envelope_refresh_interval": 1,
+    "envelope_calibration_points": 7,
+    "rhs_continuation_order": 3,
+    "timing_repeats": 1,
+    "dtype": "float64",
+    "device": "cpu"
+  },
+  "initial_model_fingerprint": "e917188132fa44ae87ddfba77eb31045dcc0082f0c77098bc0cde0effae61661",
+  "parameter_count": 33,
+  "final_training_loss": 1.2500932264067037,
+  "loss_history": [
+    {
+      "stage": "adam",
+      "step": 1,
+      "loss": 1.8118153808393582
+    },
+    {
+      "stage": "adam",
+      "step": 2,
+      "loss": 1.7954812805256803
+    }
+  ],
+  "lbfgs_closure_calls": 2,
+  "heldout_solution_rmse": 1.1152919126857954,
+  "heldout_residual_rmse": 1.0840306688804557,
+  "heldout_solution_rmse_by_parameter": {
+    "0.625": 0.7096602088473933,
+    "0.875": 0.9136064004078799,
+    "1.125": 1.1752295449335548,
+    "1.375": 1.5020137988171283
+  },
+  "heldout_residual_rmse_by_parameter": {
+    "0.625": 0.6851561279212769,
+    "0.875": 0.8870454866494037,
+    "1.125": 1.14338077511698,
+    "1.375": 1.4618077002032015
+  },
+  "solution_interval": [
+    -1.0,
+    1.0
+  ],
+  "residual_interval": [
+    -0.98,
+    0.98
+  ],
+  "training_seconds_including_envelope_refresh": 0.02293712500249967,
+  "method_setup_seconds": 5.00003807246685e-07,
+  "method_setup_and_training_seconds": 0.022937625006306916,
+  "solve_seconds_before_validation": 0.025140457990346476,
+  "offline_ad_calibration_seconds": 0.0,
+  "post_training_cost": {
+    "median_residual_forward_backward_seconds": 0.00332062499364838,
+    "median_saved_tensor_payload_bytes": 60648
+  },
+  "selection_diagnostics": null,
+  "derivative_error_scaled_envelope": null,
+  "ad_calibration_reference_policy": null,
+  "online_derivative_envelope_refreshes": null,
+  "online_derivative_envelope_refresh_seconds": 0.0,
+  "task": "parameterized",
+  "fixed_p2_geometry": {
+    "fixed_p2_threshold": 0.011609330383882413,
+    "near_pairs": 0,
+    "total_pairs": 72,
+    "near_rows": 0,
+    "total_rows": 6,
+    "minimum_distance": 0.013512278604139949
+  },
+  "solution_rmse": 1.1152919126857954,
+  "residual_rmse": 1.0840306688804557,
+  "saved_tensor_payload_bytes": 60648
+}

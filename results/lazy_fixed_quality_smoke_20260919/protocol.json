@@ -1,0 +1,20 @@
+{
+  "platform": "macOS-27.0-arm64-arm-64bit-Mach-O",
+  "python": "3.13.5 | packaged by Anaconda, Inc. | (main, Jun 12 2025, 11:23:37) [Clang 14.0.6 ]",
+  "torch": "2.12.0",
+  "device": "cpu",
+  "threads": 1,
+  "deterministic_algorithms": true,
+  "source_sha256": {
+    "neural_network_solvers/general_taylor_finite_part.py": "e1a2085bb192ae2620ad32c796955f10b0dd29c26b0b2cc1fb6940ca7d1144ef",
+    "experiments/sequential_tolerance_end_to_end_benchmark.py": "fd8bbfd8420b379b2e7301d8f0296170b374dcda869e8ffd8ed0273800b63741",
+    "experiments/parameterized_operator_budget_benchmark.py": "111e47e2d31e3626c18a4a2d702d512bd0268ec436f50319ef71dcc1b134635e",
+    "experiments/lazy_fixed_quality_benchmark.py": "df31c81749bc9720f0d5facd1671ab6135154d0b811294777f456e44441201da",
+    "results/neural_high_order_derivatives/metrics.json": "f4e747db88ac00b2b574d96454c67c1fd91aa1bb77521f4a7ac3dd3d45315c95"
+  },
+  "time_scope": "method setup plus training; solve includes model/RHS construction, excludes validation and timing probes",
+  "calibration_scope": "parameterized: per-run high-precision calibration included; single: existing calibration artifact reused, original generation excluded",
+  "memory_scope": "summed autograd saved-tensor payload, not allocator peak memory",
+  "paired_controls": "initial weights, equation, nodes, RHS, Adam/L-BFGS, canonical validation",
+  "run_order": "cyclic rotation across seeds; no simultaneous benchmark processes"
+}

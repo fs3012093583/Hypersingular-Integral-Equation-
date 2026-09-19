@@ -1,0 +1,96 @@
+{
+  "experiment": "sequential_tolerance_end_to_end",
+  "method": "fixed_p3",
+  "status": "ok",
+  "config": {
+    "representation": "fixed_p3",
+    "order": 2,
+    "family": "exp",
+    "coupling": 0.05,
+    "nonlinear_coefficient": 0.0,
+    "seed": 20260918,
+    "steps": 600,
+    "lbfgs_steps": 60,
+    "learning_rate": 0.002,
+    "width": 32,
+    "hidden_layers": 3,
+    "collocation_points": 48,
+    "training_quadrature_points": 64,
+    "rhs_quadrature_points": 192,
+    "validation_points": 161,
+    "validation_quadrature_points": 192,
+    "collocation_limit": 0.95,
+    "validation_limit": 0.98,
+    "max_continuation_order": 3,
+    "target_error": 1e-06,
+    "derivative_envelope_safety": 4.0,
+    "envelope_refresh_interval": 100,
+    "envelope_calibration_points": 65,
+    "derivative_metrics_path": "results/neural_high_order_derivatives/metrics.json",
+    "rhs_continuation_order": 3,
+    "dtype": "float64",
+    "timing_repeats": 3
+  },
+  "initial_model_fingerprint": "ea9f451630a5163092f286668a9607f63c47bfa41ba70bf58e61da908369c096",
+  "parameter_count": 2209,
+  "final_training_loss": 3.1760464030501375e-08,
+  "loss_history": [
+    {
+      "stage": "adam",
+      "step": 1,
+      "loss": 2.0001552303338883
+    },
+    {
+      "stage": "adam",
+      "step": 100,
+      "loss": 0.018008489552516754
+    },
+    {
+      "stage": "adam",
+      "step": 200,
+      "loss": 0.0005540350511118726
+    },
+    {
+      "stage": "adam",
+      "step": 300,
+      "loss": 0.0001512747349376593
+    },
+    {
+      "stage": "adam",
+      "step": 400,
+      "loss": 0.00010569823453907966
+    },
+    {
+      "stage": "adam",
+      "step": 500,
+      "loss": 8.64008940818963e-05
+    },
+    {
+      "stage": "adam",
+      "step": 600,
+      "loss": 7.68018126777456e-05
+    },
+    {
+      "stage": "lbfgs",
+      "step": 74,
+      "loss": 3.1760464030501375e-08
+    }
+  ],
+  "lbfgs_closure_calls": 74,
+  "solution_rmse_closed_interval": 0.0008472766657704743,
+  "solution_max_abs_error_closed_interval": 0.003536001868056804,
+  "validation_residual_rmse": 0.0003956177233178215,
+  "residual_interval": [
+    -0.98,
+    0.98
+  ],
+  "training_seconds_including_envelope_refresh": 6.777726791000532,
+  "end_to_end_seconds": 6.847506166999665,
+  "post_training_cost": {
+    "median_residual_forward_backward_seconds": 0.013786333000098239,
+    "median_saved_tensor_payload_bytes": 12652288
+  },
+  "selection_diagnostics": null,
+  "derivative_error_scaled_envelope": null,
+  "online_derivative_envelope_refreshes": null
+}

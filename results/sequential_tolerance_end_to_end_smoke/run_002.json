@@ -1,0 +1,71 @@
+{
+  "experiment": "sequential_tolerance_end_to_end",
+  "method": "fixed_p3",
+  "status": "ok",
+  "config": {
+    "representation": "fixed_p3",
+    "order": 2,
+    "family": "exp",
+    "coupling": 0.05,
+    "nonlinear_coefficient": 0.0,
+    "seed": 20260918,
+    "steps": 3,
+    "lbfgs_steps": 1,
+    "learning_rate": 0.002,
+    "width": 8,
+    "hidden_layers": 1,
+    "collocation_points": 6,
+    "training_quadrature_points": 12,
+    "rhs_quadrature_points": 32,
+    "validation_points": 25,
+    "validation_quadrature_points": 32,
+    "collocation_limit": 0.95,
+    "validation_limit": 0.98,
+    "max_continuation_order": 3,
+    "target_error": 1e-06,
+    "derivative_envelope_safety": 4.0,
+    "envelope_refresh_interval": 2,
+    "envelope_calibration_points": 9,
+    "derivative_metrics_path": "results/neural_high_order_derivatives/metrics.json",
+    "rhs_continuation_order": 3,
+    "dtype": "float64",
+    "timing_repeats": 1
+  },
+  "initial_model_fingerprint": "e4153ffd4554c6872f13955392b8ba43985d3e336f27654c5b047bbe03d036da",
+  "parameter_count": 25,
+  "final_training_loss": 1.394357215064476,
+  "loss_history": [
+    {
+      "stage": "adam",
+      "step": 1,
+      "loss": 2.6245194865732886
+    },
+    {
+      "stage": "adam",
+      "step": 3,
+      "loss": 2.560029839363672
+    },
+    {
+      "stage": "lbfgs",
+      "step": 2,
+      "loss": 1.394357215064476
+    }
+  ],
+  "lbfgs_closure_calls": 2,
+  "solution_rmse_closed_interval": 1.2442568382613508,
+  "solution_max_abs_error_closed_interval": 2.5765423398754628,
+  "validation_residual_rmse": 1.2108575766544702,
+  "residual_interval": [
+    -0.98,
+    0.98
+  ],
+  "training_seconds_including_envelope_refresh": 0.009282207998694503,
+  "end_to_end_seconds": 0.015899458001513267,
+  "post_training_cost": {
+    "median_residual_forward_backward_seconds": 0.00223908299994946,
+    "median_saved_tensor_payload_bytes": 58032
+  },
+  "selection_diagnostics": null,
+  "derivative_error_scaled_envelope": null,
+  "online_derivative_envelope_refreshes": null
+}

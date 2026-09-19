@@ -1,0 +1,15 @@
+\begin{table}[H]
+\centering
+\caption{未见参数上的三随机种子结果（均值$\pm$样本标准差，载荷为均值）\\Three-seed results at held-out parameters (mean$\pm$sample standard deviation).}
+\label{tab:parameterized}
+\small
+\begin{tabular}{lrrr}
+\toprule
+方法 & 闭区间解 RMSE & 准备+训练 (s) & 保存张量 (MiB) \\
+\midrule
+全行固定 $p=2$ & $(1.997\pm0.588)\times10^{-2}$ & $25.13\pm0.61$ & 52.14 \\
+按需固定 $p=2$ & $(1.997\pm0.588)\times10^{-2}$ & $24.43\pm0.41$ & 34.35 \\
+算子预算 & $(1.996\pm0.588)\times10^{-2}$ & $6.46\pm0.35$ & 5.39 \\
+\bottomrule
+\end{tabular}
+\end{table}

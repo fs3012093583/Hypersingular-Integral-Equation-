@@ -1,30 +1,87 @@
 {
-  "updated_at": "2026-09-16T23:49:00+08:00",
-  "current_focus": "Completed Taylor-subtraction PINN validation for the constant hypersingular test equation",
+  "updated_at": "2026-09-19T22:40:43+08:00",
+  "current_focus": "Quality revision: fair lazy fixed-p comparison, correct high-precision reference chain, concise manuscript",
   "priority": "high",
   "urgency": "medium",
   "importance": "high",
   "blocking_issues": [],
+  "quality_revision": {
+    "single_paired_status": "complete, 18 records, exec 85095 exited 0",
+    "single_paired_output": "results/lazy_fixed_quality_single_20260919",
+    "parameterized_status": "complete, 9 records, original-calibration batch",
+    "parameterized_output": "results/lazy_fixed_quality_parameterized_20260919",
+    "no_concurrent_cpu_numerical_work_until_timing_finishes": false,
+    "reference_audit": "complete v2 reruns: general operator, components, p/c/adaptive sweeps, sequential operator-only, full operator-budget decomposition and 100-digit neural derivative audit",
+    "reference_key_result": "float32 m6 weighted quotient indicator covers 15/15; quotient budget 15/15; full discrete budget 9/15; dominant moment RMSE 4.2485e-2 versus weighted quotient 1.8286e-4",
+    "calibration_v2_repeat_session_id": 49669,
+    "calibration_v2_repeat_status": "COMPLETE: exec 49669 exited 0 after 18 single-function and 9 parameterized runs; source/archive/live hashes verified. Do not poll/restart the closed session.",
+    "calibration_v2_outputs": ["results/lazy_fixed_quality_single_calibration_v2_20260919", "results/lazy_fixed_quality_parameterized_calibration_v2_20260919"],
+    "do_not_edit_training_dependencies_while_repeat_runs": false,
+    "v2_single_results": "lazy/budget m4 RMSE 4.76493e-4/3.92465e-4 and 17.6733/5.6848 s; m6 RMSE 1.87252e-3/2.11504e-3 and 156.0459/66.9979 s. M6 mean RMSE rises 13.0%, so non-inferiority is not established.",
+    "v2_parameterized_results": "lazy/budget heldout RMSE 1.99686e-2/1.99622e-2; 24.4335/6.4580 s including per-run MP calibration",
+    "training_envelope_observation": "all nine budget runs exceed prior B in needed remainder orders at first 100-step refresh; observed AD magnitudes only, not actual quotient-budget failures",
+    "manuscript": "15-page quality draft: paired main tables use v2; historical branch table labeled; online B, safety constants, disabled training trust radius and detached branch gradients described correctly; m6 accuracy deterioration disclosed",
+    "pdf": "output/pdf/quality_revision_calibration_v2_20260919/main.pdf",
+    "verification": "115 pytest tests passed, final 4.70 s; all protocol/archive/live source hashes match; strict pairing validation passed; diff check clean; 15-page PDF visually checked, ordered tables, no undefined refs/overfull boxes/internal paths",
+    "unresolved_budget_handling": "diagnostic mask/count and optional require_estimated_budget failure now implemented and tested; does not certify actual error",
+    "previous_goal_turn": "progress: calibration-v2 full repeat completed and integrated, honest 15-page PDF built, observed stale-B failures found and independent trajectory audit protocol written; goal not complete"
+  },
   "local_code_state": {
     "repo": "/Users/a/Projects/Hypersingular Integral Equation,",
     "branch": "main",
     "dirty_before_task": true,
-    "preserve_user_files": [
-      "neural_network_solvers/Neraul_Singularity_Removal_by_Subtraction.py",
-      "neural_network_solvers/neural_solver_ln2_approx.py"
+    "new_core_module": "neural_network_solvers/general_taylor_finite_part.py"
+  },
+  "remote_code_state": {
+    "preferred_host": "wsl-server-localip",
+    "fallback_hosts": ["wsl-server", "win-server-localip"],
+    "status": "historically unavailable on 2026-09-18; not rechecked in current local quality revision",
+    "gpu_requested": "4060 Ti",
+    "gpu_used": false
+  },
+  "data_state": {
+    "manufactured_function": "u(t)=exp(t)",
+    "interval": [-1.0, 1.0],
+    "kernel_orders": [1, 2, 3, 4, 5, 6]
+  },
+  "historical_feasibility_verification": {
+    "full_tests": "42 passed",
+    "targeted_tests": "7 passed",
+    "diff_check": "clean for all new innovation-study files",
+    "plot_qa": "both stability figures visually inspected after layout correction",
+    "order_2048_direct_absolute_errors": [
+      4.3520742565306136e-14,
+      1.1446399383885364e-13,
+      2.3169199891981407e-10,
+      2.594068047034881e-7,
+      4.118442789601273e-4,
+      4.5219809169103237e-1
+    ],
+    "order_2048_balanced_p2_absolute_errors": [
+      4.3520742565306136e-14,
+      4.2521541843143495e-14,
+      4.0545344859310717e-13,
+      4.463540648202979e-12,
+      5.097655630947884e-11,
+      2.1075363676459347e-11
+    ],
+    "general_taylor_neural_solution_rms_m2_m4": [
+      8.100664e-4,
+      7.10934e-5,
+      7.60124e-5
+    ],
+    "simple_auxiliary_cauchy_solution_rms_m2_m4": [
+      8.88183e-2,
+      3.80562e-2,
+      3.14492e-2
+    ],
+    "endpoint_factored_chain_solution_rms_m2_m4": [
+      7.44395e-2,
+      8.83039e-2,
+      1.439715e-1
     ]
   },
-  "remote_code_state": null,
-  "data_state": {
-    "dataset": null,
-    "manufactured_solution": "u(t)=1"
-  },
-  "latest_verification": {
-    "tests": "4 passed",
-    "max_abs_solution_error": 0.00012120315023189665,
-    "rms_solution_error": 0.000023792242384259994,
-    "validation_num_quadrature": 192,
-    "rms_equation_residual": 0.0007099906406396513
-  },
-  "next": "Await approval before extending to the parameterized a(t), b(t), gamma equation"
+  "report": "reports/innovation_feasibility_note.md",
+  "proposed_title": "A cancellation-controlled arbitrary-order Taylor finite-part neural collocation method for hypersingular integral equations",
+  "next": "No live jobs. Follow reports/training_reliability_audit_plan.md: checkpoint actual Adam/L-BFGS states plus active envelopes, verify nonintrusive capture, audit MP derivative/quotient/gradient reliability before changing policy or adding applications. Current PDF and v2 paired results are complete milestones, not a completed publication-quality goal."
 }

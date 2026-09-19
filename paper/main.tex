@@ -1,0 +1,653 @@
+% !TEX program = xelatex
+\documentclass[UTF8,fontset=none,10.5pt,a4paper]{ctexart}
+
+\usepackage[left=2.15cm,right=2.15cm,top=2.15cm,bottom=2.15cm]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathrsfs,bm,booktabs,array,multirow}
+\usepackage{graphicx,float,caption,subcaption}
+\usepackage{xcolor,enumitem,hyperref,microtype}
+\setCJKmainfont{Songti SC}
+\setCJKsansfont{PingFang SC}
+\setCJKmonofont{Songti SC}
+\setmainfont{Times New Roman}
+\hypersetup{hidelinks}
+\graphicspath{{figures/}}
+\setlength{\parindent}{2em}
+\setlength{\parskip}{0pt}
+\setlength{\abovedisplayskip}{5pt plus 2pt minus 2pt}
+\setlength{\belowdisplayskip}{5pt plus 2pt minus 2pt}
+\renewcommand{\arraystretch}{1.16}
+\captionsetup{font=small,labelsep=quad}
+\setlist{nosep,leftmargin=2em}
+\numberwithin{equation}{section}
+\newtheorem{remark}{注}
+\newtheorem{proposition}{命题}
+
+\newcommand{\fp}{\operatorname{f.p.}}
+\newcommand{\pv}{\operatorname{p.v.}}
+\newcommand{\rmse}{\operatorname{RMSE}}
+\newcommand{\dd}{\,\mathrm d}
+\newcommand{\eps}{\varepsilon_{\mathrm{mach}}}
+
+\title{\bfseries 一般阶有限部分积分方程的求积权重自适应神经配置法}
+\author{作者姓名（待补）\\
+\small 作者单位及城市邮编（待补）}
+\date{}
+
+\begin{document}
+\maketitle
+\vspace{-2.0em}
+
+\noindent\textbf{摘\quad 要：}
+针对一般整数阶 Hadamard 有限部分算子经 Taylor 减奇异后仍存在的近对角浮点相消，提出求积权重驱动的局部延拓与逐阶停止方法。直接差商和不同阶数的局部延拓由舍入、截断及自动微分误差指标比较，再按求积权重聚合，未满足行级预算的位置才继续生成高阶导数。当候选指标为有效上界时，该判据控制同一求积规则下的差商替换误差；完整误差仍需计入解析矩、求积与累加误差。三种子四阶试验中，相较近场按需的固定 $p=2$，闭区间解 RMSE 均值由 $4.76\times10^{-4}$ 变为 $3.92\times10^{-4}$，准备加训练由 17.67 s 降至 5.68 s；六阶则在耗时减少约 $57\%$ 的同时出现约 $13\%$ 的平均解误差增幅。单函数计时复用既有校准资料。结果支持在所测配置下减少高阶求导成本，不支持精度普遍不降或跨训练轨迹的误差认证。
+
+\noindent\textbf{关键词：}Hadamard 有限部分积分；超奇异积分方程；Taylor 减奇异；近对角相消；神经配置
+
+\noindent\textbf{中图分类号：}O241\hfill
+\textbf{文献标志码：}A
+
+\vspace{0.8em}
+\begin{center}
+{\large\bfseries A quadrature-weighted adaptive neural collocation method for general-order finite-part integral equations}\par
+\vspace{0.4em}
+{Author name (to be completed)}\par
+{\small Affiliation, city and postal code (to be completed)}
+\end{center}
+
+\noindent\textbf{Abstract:}
+Taylor subtraction removes the analytic singularity of an integer-order Hadamard finite-part integral but can leave severe floating-point cancellation. We propose quadrature-weighted local continuation with staged derivative generation. Indicators for roundoff, truncation, and automatic-differentiation errors compare direct subtraction with local expansions; a target row generates further derivatives only while its weighted indicator exceeds the budget. Valid candidate bounds control quotient-replacement error under the same quadrature rule, while moment, quadrature, and accumulation errors remain separate. In a three-seed fourth-order comparison against fixed $p=2$ with near-field-only derivative generation, mean closed-interval solution RMSE changes from $4.76\times10^{-4}$ to $3.92\times10^{-4}$, and setup plus training decreases from 17.67 to 5.68 s. For order six, a time reduction of approximately $57\%$ accompanies a $13\%$ increase in mean solution RMSE. These single-function timings reuse existing calibration data. The results support reduced differentiation cost in the tested settings, not universally preserved solution accuracy or certified errors throughout training.
+
+\noindent\textbf{Key words:} Hadamard finite-part integral; hypersingular integral equation; Taylor subtraction; near-diagonal cancellation; neural collocation
+
+\section{引言}
+
+Hadamard 有限部分积分用于解释超奇异核所产生的发散积分，在断裂力学、边界元和势问题中具有基础作用。传统数值处理主要包括解析减奇异、专用 Gauss 型求积、周期梯形公式和变量变换等\cite{Toh1994,Monegato1996,Carley2009,Sidi2014,Sidi2021,Sidi2022,Sidi2024}。这些工作已经给出严谨而高效的有限部分离散，因此本文不把有限部分定义或 Taylor 减奇异恒等式作为新结果。
+
+神经网络求解微分方程通常借助自动微分构造残差\cite{Raissi2019,Baydin2018}，辅助变量思想还可将积分或非局部关系转化为可训练约束\cite{Yuan2022}。近期已有工作采用前馈神经网络求解线性和非线性超奇异积分方程，并与多项式方法比较\cite{Rezaei2025}。由此，“用神经网络求解超奇异积分方程”本身也不能构成本文的创新点。
+
+降低微分代价已有不同路径：深度学习混合方法通过引入速度梯度变量避免 Stokes 系统中的二阶自动微分\cite{Yang2026Stokes}，Taylor 模式自动微分则通过重组计算图降低高阶算子的求导成本\cite{Dangel2025}。物理结构也可用于改造神经算子\cite{Liu2026}。本文不提出新的自动微分后端，而是在给定后端上判断哪些高阶导数不必计算；其收益须与同样按需生成导数的固定阶数实现比较。
+
+本文关注上述两条路线结合后出现的一个具体数值问题。对 $m$ 阶核减去 $m-1$ 阶 Taylor 多项式后，被积函数在数学上连续，但计算机需要先形成一个量级为 $|\tau-t|^m$ 的余项，再除以 $(\tau-t)^m$。当 $\tau$ 接近 $t$ 时，分子由若干相近数相减得到；当 $m$ 增大时，舍入误差会被高次小量放大。类似的近奇异相消在其他边界积分求积中也会造成显著精度损失\cite{Krantz2026}。固定一个经验邻域进行级数替代虽然容易实现，却无法同时适应不同阶数、不同延拓阶数和 float32/float64。
+
+本文的工作包括：
+\begin{enumerate}
+  \item 为直接差商与局部 Taylor 延拓建立包含舍入、截断及自动微分误差的候选指标，用高精度导数检验区分解析上界与经验包络；
+  \item 将候选指标按求积权重聚合为行级预算，仅对未满足预算的行继续生成高阶导数，并在完整误差分解与逆稳定性条件下连接配置残差和内区间解误差；
+  \item 通过分支消融、固定阶数的按需实现、完整训练及参数化单网络对照，分别检验数值稳定性与计算成本；保留 Chebyshev 配置作为一维光滑问题的精度参照。
+\end{enumerate}
+实验只验证到 $m=6$，因而文中的“一般阶”指算法和公式不依赖某个固定阶数，不代表已经对任意大阶数作出计算保证。
+
+\section{一般阶 Taylor 有限部分算子}
+
+\subsection{经典有限部分表示}
+
+设 $m\in\mathbb N^+$，$a<t<b$，定义
+\begin{equation}
+\mathcal I_m[u](t)=\fp\!\int_a^b\frac{u(\tau)}{(\tau-t)^m}\dd\tau .
+\label{eq:operator}
+\end{equation}
+当 $m=1$ 时，式\eqref{eq:operator}按 Cauchy 主值理解；当 $m\ge2$ 时按 Hadamard 有限部分理解。若 $u$ 足够光滑，在 $t$ 处减去 $m-1$ 阶 Taylor 多项式可得
+\begin{align}
+\mathcal I_m[u](t)={}&
+\sum_{k=0}^{m-2}\frac{u^{(k)}(t)}{k!}
+\frac{(a-t)^{-(m-k-1)}-(b-t)^{-(m-k-1)}}{m-k-1}
+\nonumber\\
+&+\frac{u^{(m-1)}(t)}{(m-1)!}
+\ln\left|\frac{b-t}{a-t}\right|
++\int_a^b Q_m[u](t,\tau)\dd\tau ,
+\label{eq:taylor-fp}
+\end{align}
+其中
+\begin{equation}
+Q_m[u](t,\tau)=
+\frac{u(\tau)-\displaystyle\sum_{k=0}^{m-1}
+u^{(k)}(t)(\tau-t)^k/k!}{(\tau-t)^m} .
+\label{eq:quotient}
+\end{equation}
+式\eqref{eq:quotient}在 $\tau=t$ 处的连续极限为 $u^{(m)}(t)/m!$。式\eqref{eq:taylor-fp}是本文实现的数学起点，其恒等性属于经典结果。
+
+\subsection{局部延拓与误差平衡尺度}
+
+记 $h=\tau-t$。当 $|h|$ 很小时，直接计算式\eqref{eq:quotient}需要形成 $O(|h|^m)$ 的余项。若函数值及低阶导数的浮点计算误差合并记为 $C_{\mathrm r}\eps$，则直接差商的绝对误差可近似写成
+\begin{equation}
+E_{\mathrm{dir}}(h)\lesssim C_{\mathrm r}\eps |h|^{-m}.
+\label{eq:roundoff}
+\end{equation}
+另一方面，将 $Q_m$ 在 $h=0$ 处继续展开 $p$ 阶，得到
+\begin{equation}
+Q_{m,p}^{\mathrm{loc}}[u](t,t+h)=
+\sum_{j=0}^{p}\frac{u^{(m+j)}(t)}{(m+j)!}h^j,
+\label{eq:continuation}
+\end{equation}
+若 $u^{(m+p+1)}$ 在邻域内有界，则其截断误差满足
+\begin{equation}
+E_{\mathrm{loc}}(h)\lesssim C_{\mathrm t}|h|^{p+1}.
+\label{eq:truncation}
+\end{equation}
+平衡式\eqref{eq:roundoff}与式\eqref{eq:truncation}，并以区间长度 $L=b-a$ 恢复尺度，得到
+\begin{equation}
+\delta_*=cL\eps^{1/(m+p+1)},
+\qquad
+c\approx L^{-1}(C_{\mathrm r}/C_{\mathrm t})^{1/(m+p+1)}.
+\label{eq:threshold}
+\end{equation}
+由于 $C_{\mathrm r}$ 和 $C_{\mathrm t}$ 依赖函数尺度、导数、实现和求积规则，式\eqref{eq:threshold}是可解释的误差平衡尺度，而非对所有问题都最优的阈值。本文默认 $c=1$，并通过灵敏度实验检验该选择。
+
+固定阶数基线采用的差商为
+\begin{equation}
+\widehat Q_{m,p}(t,\tau)=
+\begin{cases}
+Q_{m,p}^{\mathrm{loc}}(t,\tau),&|\tau-t|\le\delta_*,\\
+Q_m(t,\tau),&|\tau-t|>\delta_*.
+\end{cases}
+\label{eq:piecewise}
+\end{equation}
+所需的 $u^{(k)}(t)$ 由自动微分逐阶生成。此固定阈值不依赖网络参数，可对选中表达式反向传播。后文自适应指标则依赖当前网络；实现中冻结离散选择，只对选中分支求导，这并不保证切换处的连续性或参数梯度精度。
+
+\begin{remark}
+式\eqref{eq:piecewise}只处理正则差商内部的近对角相消。式\eqref{eq:taylor-fp}中的解析矩、端点邻近增长以及高阶导数本身的精度限制仍然存在。后文 float32 六阶结果正是这一边界的数值体现。
+\end{remark}
+
+\subsection{局部误差指标与延拓阶数选择}
+
+全局尺度式\eqref{eq:threshold}解释了 $m,p,\eps$ 对切换半径的主要影响，但常数 $c$ 仍然吸收了函数尺度和导数信息。为将这一常数显式化，记
+\begin{equation}
+S_m(t,h)=|u(t+h)|+
+\sum_{k=0}^{m-1}\frac{|u^{(k)}(t)|}{k!}|h|^k,
+\qquad
+\gamma_n=\frac{n\eps}{1-n\eps}.
+\label{eq:direct-scale}
+\end{equation}
+在无上溢、下溢且 $\nu_m\eps<1$ 的标准浮点模型下\cite{Higham2002}，若暂不计函数值和自动微分本身的输入误差，则形成 Taylor 余项并除以 $h^m$ 所产生的条件前向误差可估计为
+\begin{equation}
+\widehat E_{\mathrm D}(t,h)
+=\kappa_{\mathrm D}\gamma_{\nu_m}
+\frac{S_m(t,h)}{|h|^m},
+\label{eq:direct-indicator}
+\end{equation}
+其中 $\nu_m$ 表示形成分子的有效运算次数，$\kappa_{\mathrm D}\ge1$ 为吸收实现细节的安全系数。对于局部 $p$ 阶延拓，定义
+\begin{equation}
+L_{m,p}(t,h)=
+\sum_{j=0}^{p}\frac{|u^{(m+j)}(t)|}{(m+j)!}|h|^j,
+\qquad
+M_{m+p+1}(t,h)=
+\max_{\xi\in[t,t+h]}|u^{(m+p+1)}(\xi)|,
+\label{eq:local-scales}
+\end{equation}
+区间 $[t,t+h]$ 在 $h<0$ 时按无向线段理解。相应误差指标为
+\begin{equation}
+\widehat E_{\mathrm L,p}(t,h)=
+\kappa_{\mathrm L}\gamma_{\nu_p}L_{m,p}(t,h)
++\frac{M_{m+p+1}(t,h)}{(m+p+1)!}|h|^{p+1}.
+\label{eq:local-indicator}
+\end{equation}
+若自动微分得到的 $u^{(k)}(t)$ 具有绝对误差界 $\eta_k(t)$，则还应在式\eqref{eq:local-indicator}右端加入
+\begin{equation}
+\sum_{j=0}^{p}\frac{\eta_{m+j}(t)}{(m+j)!}|h|^j,
+\label{eq:ad-error}
+\end{equation}
+直接差商指标中也应加入对应的函数值和低阶导数误差项。为使 $\eta_k$ 可观测，本文对与主实验同结构的网络建立 100 位 Taylor-jet 参考。对浮点格式 $q$，定义
+\begin{equation}
+\alpha_k^{(q)}=\max_{s,t}
+\frac{|D^k_{\mathrm{AD},q}u_{\theta_s}(t)-D^k_{\mathrm{MP}}u_{\theta_s}(t)|}
+{\max(|D^k_{\mathrm{MP}}u_{\theta_s}(t)|,1)},
+\qquad
+\eta_k^{(q)}(t)=\alpha_k^{(q)}\max(|D^k_{\mathrm{AD},q}u_\theta(t)|,1).
+\label{eq:measured-eta}
+\end{equation}
+其中高精度参考使用该浮点格式实际存储的参数，因而不把参数量化误差混入自动微分误差。$s$ 遍历三个随机网络，$t$ 取五个独立位置。式\eqref{eq:measured-eta}是网络族上的经验包络，不是对训练过程中所有参数的严格证明。
+
+\begin{proposition}[局部表示选择]
+设 $u\in C^{m+p+1}$，且式\eqref{eq:direct-indicator}中的浮点模型成立。若 $M_{m+p+1}(t,h)$ 是式\eqref{eq:local-scales}所定义的线段导数上界，则除去未显式计入的函数求值和自动微分输入误差，直接差商与局部延拓的误差分别受式\eqref{eq:direct-indicator}和式\eqref{eq:local-indicator}控制。因此，在
+\begin{equation}
+\widehat E_{\mathrm L,p}(t,h)
+\le \widehat E_{\mathrm D}(t,h)
+\label{eq:local-switch}
+\end{equation}
+时使用局部延拓，不等式反向时使用直接差商，可得到逐点误差指标意义下不劣于两种候选表示的选择。
+\end{proposition}
+\begin{proof}
+式\eqref{eq:direct-indicator}由浮点求和的 $\gamma_n$ 界除以 $|h|^m$ 得到；式\eqref{eq:local-indicator}的第一项来自局部多项式求和，第二项由 Taylor 定理的 Lagrange 余项给出。在两个上界中取较小者即可得到式\eqref{eq:local-switch}。这里的结论是条件前向误差界，不包含未建模的函数求值和自动微分输入误差。
+\end{proof}
+
+命题中的比较不再要求预先给出单一 $\delta_*$。若在一个足够小的邻域内把 $S_m$ 和 $M_{m+p+1}$ 视为缓变，并忽略局部求和舍入项，则式\eqref{eq:local-switch}退化为
+\begin{equation}
+\delta_{m,p}(t)
+\approx
+\left[
+\frac{\kappa_{\mathrm D}\gamma_{\nu_m}S_m(t,0)(m+p+1)!}
+{M_{m+p+1}(t,0)}
+\right]^{1/(m+p+1)},
+\label{eq:local-threshold}
+\end{equation}
+说明式\eqref{eq:threshold}可视为式\eqref{eq:local-threshold}在函数尺度未知时的无量纲近似。
+
+延拓阶数也由同一组指标确定。给定最大候选阶数 $p_{\max}$，纯精度选择为
+\begin{equation}
+s_*(t,h)=\arg\min_{s\in\{\mathrm D,0,\ldots,p_{\max}\}}
+\widehat E_s(t,h),
+\label{eq:accuracy-order}
+\end{equation}
+其中 $s=\mathrm D$ 表示直接差商。式\eqref{eq:accuracy-order}只追求误差，因而在深近场往往偏向较大的 $p$。若希望限制高阶自动微分，可给定局部误差预算 $\mathrm{tol}_Q$，并选择
+\begin{equation}
+s_{\mathrm{tol}}(t,h)=
+\arg\min_s C_s,
+\quad
+\text{s.t.}\quad \widehat E_s(t,h)\le\mathrm{tol}_Q,
+\label{eq:tolerance-order}
+\end{equation}
+其中 $C_s$ 是候选表示的导数阶数或实测计算代价；若没有候选满足预算，则回退到式\eqref{eq:accuracy-order}。也可定义近最优集合
+\begin{equation}
+\mathcal A_\rho(t,h)=
+\{s:\widehat E_s(t,h)\le\rho\min_r\widehat E_r(t,h)\},
+\qquad \rho\ge1,
+\label{eq:near-optimal-set}
+\end{equation}
+并在 $\mathcal A_\rho$ 中选择最低阶候选。本文算子试验取 $p_{\max}=3$、$\rho=2$。需要强调，若先计算所有候选导数再选择，式\eqref{eq:tolerance-order}只减少被采用的展开阶数，并不会自动减少运行时间。为此，本文采用如下逐阶过程：先生成至 $m-1$ 阶并检验直接差商；若未满足 $\mathrm{tol}_Q$，生成 $u^{(m)}$ 并检验 $p=0$；此后每次只增加一阶，依次检验 $p=1,2,\ldots$，首次满足预算即停止。若所有候选均不满足，则回退到已计算候选中指标最小者。
+
+要使上述过程真正提前停止，余项估计不能强制先生成 $u^{(m+p+1)}$。解析制造函数直接使用线段导数界 $M_{m+p+1}$；完整神经训练在第 $r$ 次包络更新时采用
+\begin{equation}
+B_k^{[r]}=\max\!\left\{B_k^{[r-1]},\,
+4\max\!\left(10^{-15},\max_{t\in G}|D^k_{\mathrm{AD}}u_{\theta^{[r]}}(t)|\right)\right\},
+\label{eq:derivative-envelope}
+\end{equation}
+初始旧值取零，$G$ 为均匀校准网格；单函数取 65 点，参数化试验取 33 点并对三个训练参数取最大值。包络在初态、每 100 个 Adam 步及 L-BFGS 前后更新，其间保持不变。以 $B_{m+p+1}^{[r]}|h|^{p+1}/(m+p+1)!$ 估计余项；实现取 $\kappa_{\mathrm D}=\kappa_{\mathrm L}=4$，余项再乘安全系数 2。单次选择到 $p$ 时只需生成至 $m+p$ 阶，包络更新却仍计算至 $m+p_{\max}+1$ 阶，其成本须计入。若每次判断都额外生成下一阶导数，选到 $p=2$ 便不能相较固定 $p=3$ 节省最高求导阶数。
+
+单点的第一遗漏项可能偶然为零，不能充当严格线段余项界。仅由后续 Taylor 项估计余项的算子原型保留式\eqref{eq:threshold}的信赖域，使用解析线段界的版本则取消此限制。完整神经训练同样不施加该固定半径，而依赖式\eqref{eq:derivative-envelope}筛选候选；其经验包络不能保证未采样位置及两次更新之间的覆盖。可计算且不过度保守的网络区间导数界仍是理论缺口。
+
+\subsection{求积权重聚合的算子误差预算}
+
+逐点预算式\eqref{eq:tolerance-order}要求每个源点--目标点对都满足同一 $\mathrm{tol}_Q$。它便于解释，但与离散积分真正关心的量并不一致：一个 Gauss 权重很小的节点即使具有较大的局部误差，对整行算子的影响也可能很小；反之，少数大权重节点可能主导积分误差。设解析矩项记为 $A_m[u](t_i)$，求积离散为
+\begin{equation}
+\widetilde{\mathcal I}_{m,i}
+=A_m[u](t_i)+\sum_{j=1}^{N_q}w_j\widehat Q_{ij}.
+\label{eq:discrete-operator}
+\end{equation}
+这里的和式按精确算术解释；另记 $\mathcal I^G_{m,i}=A_m[u](t_i)+\sum_jw_jQ_{ij}$，即同一组节点与权重上的精确差商求积值。实际浮点计算值记为 $\widehat{\mathcal I}_{m,i}$。
+对直接差商和局部 $p$ 阶延拓，分别用式\eqref{eq:direct-indicator}--\eqref{eq:ad-error}得到候选误差指标 $\widehat E_{ij}^{(\mathrm D)}$ 与 $\widehat E_{ij}^{(p)}$。当已经生成至局部阶数 $\ell$ 时，逐点保留当前指标最小的候选，记
+\begin{equation}
+e_{ij}^{(\ell)}=
+\min_{s\in\{\mathrm D,0,\ldots,\ell\}}
+\widehat E_{ij}^{(s)},
+\qquad
+\mathcal E_i^{(\ell)}=
+\sum_{j=1}^{N_q}|w_j|e_{ij}^{(\ell)}.
+\label{eq:operator-indicator}
+\end{equation}
+本文最终方法以 $\mathcal E_i^{(\ell)}\le\mathrm{tol}_{I,i}$ 作为第 $i$ 个目标行的停止条件。算法先检验直接差商，再依次生成 $p=0,1,\ldots,p_{\max}$；一旦某行满足预算，该行不再参与后续高阶自动微分。因而这里的“阶数”不是整张求积表共享的单一整数：同一目标行内可以同时采用直接差商和不同阶数的局部延拓，而计算是否继续由行级算子误差决定。
+
+\begin{proposition}[差商表示误差与残差预算]
+若 $e_{ij}^{(\ell)}$ 是所选差商的绝对误差上界，则
+\begin{equation}
+|\widetilde{\mathcal I}_{m,i}-\mathcal I^G_{m,i}|
+\le \mathcal E_i^{(\ell)}.
+\label{eq:operator-budget-bound}
+\end{equation}
+对式\eqref{eq:manufactured}，记 $\omega_i=(1-t_i^2)^{m-1}$。若取
+\begin{equation}
+\mathrm{tol}_{I,i}
+\le \frac{\mathrm{tol}_R}{|\lambda|\omega_i},
+\label{eq:budget-map-pointwise}
+\end{equation}
+则差商替代引起的离散残差扰动不超过 $\mathrm{tol}_R$，其中解析矩和加权求和暂按精确算术处理。特别地，在 $[-1,1]$ 上 $0\le\omega_i\le1$，统一取
+\begin{equation}
+\mathrm{tol}_I=\frac{\mathrm{tol}_R}{|\lambda|}
+\label{eq:budget-map-global}
+\end{equation}
+可同时控制所有目标点，并避免在端点附近人为放宽原始算子误差。
+\end{proposition}
+\begin{proof}
+由三角不等式，$|\sum_jw_j\Delta Q_{ij}|\le\sum_j|w_j||\Delta Q_{ij}|\le\mathcal E_i^{(\ell)}$，即得式\eqref{eq:operator-budget-bound}。再乘以 $|\lambda|\omega_i$ 并代入式\eqref{eq:budget-map-pointwise}即可。
+\end{proof}
+
+这一命题以逐点指标确为上界为前提。解析函数的截断项可由已知导数界控制；神经网络的导数幅值与自动微分误差包络来自有限采样，属于经验估计。指标不超过预算与真实误差不超过预算是两个不同事件，须分别检验。累计保留最小指标使 $\mathcal E_i^{(\ell)}$ 随候选阶数非增，首次达标因此给出这一枚举次序下所需的最低最高导数阶数；它不保证实测时间最短，因为筛选、校准及导数链重建同样有成本。达到 $p_{\max}$ 仍未达标时，返回最小指标候选仅是一种回退近似，不能据此声明预算满足。
+
+从差商预算转向连续积分，必须补入其余误差。对同一给定函数和目标坐标，若 $\rho_i^{\mathrm{quad}}\ge|\mathcal I^G_{m,i}-\mathcal I_m[u](t_i)|$，$\rho_i^{\mathrm{mom}}$ 控制解析矩项的计算误差（含低阶导数误差），$\rho_i^{\mathrm{sum}}$ 控制乘积与加权求和的舍入误差，则由三角不等式有
+\begin{equation}
+|\widehat{\mathcal I}_{m,i}-\mathcal I_m[u](t_i)|
+\le \mathcal E_i^{(\ell)}+\rho_i^{\mathrm{quad}}
++\rho_i^{\mathrm{mom}}+\rho_i^{\mathrm{sum}}
+=:D_i.
+\label{eq:complete-operator-error}
+\end{equation}
+节点、权重和目标坐标在此均以实际存储值为准；若参考问题使用不同输入，还须另计输入扰动。$\mathcal E_i^{(\ell)}$ 不能单独替代 $D_i$。记 $J=[-r,r]\subset(-1,1)$，
+\begin{equation}
+\mathcal A_m v
+=v+\lambda(1-t^2)^{m-1}\mathcal I_m[v],
+\qquad t\in J.
+\label{eq:linear-operator}
+\end{equation}
+
+\begin{proposition}[配置残差到解误差的后验界]
+设线性方程 $\mathcal A_m u=f$ 在给定可容许函数类 $\mathscr X\subset C^m([-1,1])$ 中有唯一解，$u_\theta\in\mathscr X$。该函数类应包含所需边界或归一化约束，且存在与误差函数 $v\in\mathscr X-\mathscr X$ 无关的常数 $C_{\mathrm{stab}}>0$，使
+\begin{equation}
+\|v\|_{L^\infty(J)}\le C_{\mathrm{stab}}
+\|\mathcal A_m v\|_{L^\infty(J)}.
+\label{eq:inverse-stability}
+\end{equation}
+配置点为 $\{t_i\}_{i=1}^{N_c}\subset J$，填充距离为
+\begin{equation}
+h_c=\sup_{t\in J}\min_{1\le i\le N_c}|t-t_i|.
+\label{eq:fill-distance}
+\end{equation}
+设 $r_\theta=\mathcal A_m u_\theta-f$ 在 $J$ 上为 Lipschitz 连续函数，其 Lipschitz 常数不超过 $L_\theta$。若数值算子与数值右端满足
+\begin{equation}
+|\widehat{\mathcal A}_{m,i}u_\theta-\mathcal A_m u_\theta(t_i)|
+\le\delta_{A,i},
+\qquad
+|\widehat f_i-f(t_i)|\le\delta_{f,i},
+\label{eq:operator-rhs-errors}
+\end{equation}
+并记数值配置残差
+$\widehat r_i=\widehat{\mathcal A}_{m,i}u_\theta-\widehat f_i$，则
+\begin{equation}
+\|u_\theta-u\|_{L^\infty(J)}
+\le C_{\mathrm{stab}}
+\left[
+\|\widehat{\bm r}\|_{\ell^\infty}
++\max_i(\delta_{A,i}+\delta_{f,i})
++L_\theta h_c
+\right].
+\label{eq:posteriori-solution-bound}
+\end{equation}
+若式\eqref{eq:complete-operator-error}对 $u_\theta$ 成立，并以 $\rho_{A,i}^{\mathrm{alg}}$ 控制函数值求值、系数乘法等其余方程组装误差，则可取
+\begin{equation}
+\delta_{A,i}
+= |\lambda|(1-t_i^2)^{m-1}D_i+\rho_{A,i}^{\mathrm{alg}},
+\qquad
+\|\widehat{\bm r}\|_{\ell^\infty}
+\le \sqrt{N_c\mathcal L(\theta)}.
+\label{eq:posteriori-components}
+\end{equation}
+\end{proposition}
+\begin{proof}
+对任意 $t\in J$，取距其最近的配置点 $t_i$。由 $r_\theta$ 的 Lipschitz 连续性、式\eqref{eq:operator-rhs-errors}和三角不等式，
+\[
+|r_\theta(t)|
+\le |r_\theta(t_i)|+L_\theta|t-t_i|
+\le |\widehat r_i|+\delta_{A,i}+\delta_{f,i}+L_\theta h_c.
+\]
+对 $t$ 取上确界，再将 $v=u_\theta-u$ 代入式\eqref{eq:inverse-stability}，即得式\eqref{eq:posteriori-solution-bound}。式\eqref{eq:posteriori-components}的第一式由完整算子误差分解得到；第二式对式\eqref{eq:training-loss}的未归一化残差损失成立，由 $\|\widehat{\bm r}\|_{\ell^\infty}\le\|\widehat{\bm r}\|_{\ell^2}=\sqrt{N_c\mathcal L(\theta)}$ 得到。
+\end{proof}
+
+命题 3 是条件性后验估计。$C_{\mathrm{stab}}$、$L_\theta$ 及其余误差项尚未获得统一的可计算上界，故差商预算达标不等于解误差得到认证。积分始终依赖全区间函数，估计则仅控制 $J=[-0.95,0.95]$ 上的误差；闭区间 RMSE 由独立检验给出。非线性情形还需要相应的局部逆稳定性。
+
+\section{神经配置与匹配基线}
+
+\subsection{制造方程}
+
+在 $(-1,1)$ 上考虑
+\begin{equation}
+u(t)+\lambda(1-t^2)^{m-1}\mathcal I_m[u](t)+\mu u^3(t)=f(t),
+\label{eq:manufactured}
+\end{equation}
+其中 $\lambda=0.05$。线性主实验取 $\mu=0$，非线性补充实验取 $\mu=0.1$。因 $\mathcal I_m[u](t)$ 在端点附近含有增长项，权重 $(1-t^2)^{m-1}$ 用于形成数值上温和的制造方程，并不改变有限部分算子的定义。解析解取
+\begin{equation}
+u_1(t)=e^t,\qquad
+u_2(t)=\sin(\pi t),\qquad
+u_3(t)=\frac{1}{1+0.5t}.
+\label{eq:families}
+\end{equation}
+右端项由解析解、192 点 Gauss--Legendre 求积及 $p=3$ 的平衡延拓独立生成；训练算子使用 64 点求积并按实验设置改变差商表示，从而避免训练和右端项完全共享同一低分辨率离散。
+
+\subsection{网络与损失}
+
+用三隐层全连接网络 $u_\theta$ 表示解，每层 32 个神经元，激活函数为 $\tanh$，参数总数为 2209。配置点为 $[-0.95,0.95]$ 上的 48 个余弦点。记式\eqref{eq:manufactured}的离散残差为 $R_\theta(t_i)$，训练目标为
+\begin{equation}
+\mathcal L(\theta)=\frac1{N_c}\sum_{i=1}^{N_c}|R_\theta(t_i)|^2.
+\label{eq:training-loss}
+\end{equation}
+先进行 600 步 Adam，再进行至多 60 次 L-BFGS 迭代。解误差在包含端点的 161 个等距点上统计；方程残差由于算子只在开区间定义，在 $[-0.98,0.98]$ 的 161 个独立余弦点上统计。二者口径不混用。
+
+\subsection{Chebyshev 配置基线}
+
+线性问题采用 20 次 Chebyshev 多项式表示解\cite{Trefethen2000}，在 28 个余弦点上最小二乘配置，算子求积使用 160 点。该基线与神经方法共享式\eqref{eq:piecewise}，因此比较的是参数化和求解过程，不是两种完全独立的有限部分求积。非线性实验不强行给出未实现的谱基线。
+
+\section{数值实验}
+
+\subsection{实验设置与评价指标}
+
+计算在 ARM64 macOS 的 CPU 上完成，软件环境为 Python 3.13.5、PyTorch 2.12.0、NumPy 2.3.5 和 mpmath 1.3.0。局部差商与算子参考值采用 90 位 mpmath，高阶网络导数参考采用 100 位 mpmath Taylor jet。主要设置见表\ref{tab:setup}。
+
+\begin{table}[H]
+\centering
+\caption{实验设置\\Experimental settings}
+\label{tab:setup}
+\small
+\begin{tabular}{p{3.3cm}p{10.1cm}}
+\toprule
+项目 & 设置\\
+\midrule
+算子试验 & $m=1,\ldots,6$；float32/float64；三类函数；$t=-0.95,-0.5,0,0.5,0.95$\\
+局部距离 & $|h|=10^{-1},10^{-3},10^{-5},10^{-7},10^{-9}$\\
+算子求积点 & $N_q=32,64,128,256,512,1024,2048$\\
+主延拓设置 & 算子消融 $p=0,1,2,3$，$c=1$；完整训练主基线 $p=2$；自适应方法 $p_{\max}=3$\\
+逐阶预算 & 逐点基线：$\mathrm{tol}_Q=10^{-3}$；本文方法：$\mathrm{tol}_R=10^{-4}$，$\mathrm{tol}_I=\mathrm{tol}_R/|\lambda|=2\times10^{-3}$\\
+神经网络 & 3 个隐藏层，每层 32 个神经元，$\tanh$，2209 个参数\\
+神经训练 & 48 个配置点；64 点训练求积；Adam 600 步，学习率 $2\times10^{-3}$；L-BFGS 60 步\\
+独立检验 & 192 点求积；解误差区间 $[-1,1]$；残差区间 $[-0.98,0.98]$\\
+随机种子 & 20260918、20260919、20260920\\
+完整训练对照 & 固定 $p=2$ 同时设置全行与近场按需实现；与算子预算作三种子配对；另保留仅极限替代和逐点预算消融；经验导数包络每 100 步更新\\
+参数化补充试验 & $m=4$；$u(t,\xi)=e^{\xi t}$；训练参数 $\xi=0.5,1.0,1.5$；检验参数 $\xi=0.625,0.875,1.125,1.375$；单个双输入网络；3 个随机种子\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+为避免参考值接近零时相对误差失真，局部差商使用
+\begin{equation}
+E_{\mathrm s}=\frac{|Q_{\mathrm{num}}-Q_{\mathrm{ref}}|}
+{\max(|Q_{\mathrm{ref}}|,1)}
+\end{equation}
+作为尺度化误差；完整算子表直接报告绝对误差的均方根。神经解误差定义为
+\begin{equation}
+\rmse_u=\left[\frac1N\sum_{j=1}^N
+|u_\theta(t_j)-u_{\mathrm{exact}}(t_j)|^2\right]^{1/2}.
+\end{equation}
+
+\subsection{近对角相消与算子误差}
+
+图\ref{fig:operator}把最终方法的两个组成分支与组合结果放在同一坐标系中。左图汇总三类函数和五个评价点上的双精度六阶局部差商：全程直接计算式\eqref{eq:quotient}从 $|h|=10^{-3}$ 起快速失去精度，至 $10^{-9}$ 时中位尺度化误差跨越数十个数量级；全程使用 $p=2$ 的局部延拓式\eqref{eq:continuation}在近对角处稳定，但当距离增至 $10^{-1}$ 时已出现可见截断误差；平衡混合式\eqref{eq:piecewise}分别在两个区域选择适合的表示。右图给出三种策略的双精度完整算子误差，说明局部延拓不能在全区间替代直接差商，而分区组合可同时避免近场相消和远场截断误差。
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.98\textwidth]{direct_local_hybrid_ablation_v2.pdf}
+\caption{直接差商、全程局部 Taylor 延拓与误差平衡混合公式的比较：（a）双精度六阶局部差商；（b）双精度 256 点有限部分算子。全程局部延拓仅用于诊断其远场截断误差。\\Comparison of direct subtraction, global use of the local Taylor continuation, and the error-balanced hybrid: (a) float64 sixth-order quotient; (b) float64 256-point finite-part operator. Global use of the local continuation is included only to diagnose its far-field truncation error.}
+\label{fig:operator}
+\end{figure}
+
+表\ref{tab:operator}给出 256 点求积下跨三函数、五位置的算子绝对误差 RMSE。低阶时两种方法相近；从三阶起直接差商随 $m$ 快速恶化。双精度六阶从 $4.99$ 降至 $1.20\times10^{-8}$；单精度六阶虽从 $1.86\times10^9$ 降至 $4.57\times10^{-2}$，但仍非高精度结果。另一方面，全区间只用 $p=2$ 局部展开时，双精度六阶 RMSE 为 $4.76\times10^{-1}$，显示其远场截断误差。三分支比较说明，稳定性来自两种表示在适当区域内的组合，而非在全区间用有限阶多项式替代原差商。
+
+\input{tables_operator_v2/operator.tex}
+
+图\ref{fig:quadrature-convergence}进一步给出求积点从 32 增至 2048 时的双精度结果。二阶直接差商与平衡延拓接近舍入误差影响区，而固定 $\delta=5\times10^{-3}$、$p=1$ 的截断误差平台较高。四、六阶直接差商并不随求积加密单调改善，因为更密的节点同时带来更小的 $|\tau-t|$ 和更强的相消放大。平衡延拓在高阶形成明显更低的误差平台，但仍非随求积加密严格单调收敛。同一固定阈值也不能同时匹配二、四、六阶。
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.98\textwidth]{operator_quadrature_convergence_v2.pdf}
+\caption{双精度有限部分算子的求积加密结果。\\Quadrature refinement for the float64 finite-part operator.}
+\label{fig:quadrature-convergence}
+\end{figure}
+
+\subsection{延拓阶数与阈值系数}
+
+表\ref{tab:p-ablation}表明，延拓阶数并非越高越好。$p=0$ 只有最低局部截断精度，$p=3$ 又需要更高阶导数并改变切换半径；本组双精度算子上，$p=2$ 在四至六阶取得最均衡的结果。该现象与式\eqref{eq:threshold}的误差平衡解释一致。
+
+\input{tables_operator_v2/p_ablation.tex}
+
+固定 $p$ 的消融是在全部算例完成后回看误差，因而“每个 $m$ 选取最佳 $p$”属于事后最优。表\ref{tab:adaptive-p}比较该事后最优值与式\eqref{eq:near-optimal-set}的逐点选择。实用版本用两个后续项估计余项并保留全局信赖域；导数界版本采用解析线段上界并取消全局信赖域，两者均取 $p_{\max}=3$、$\rho=2$。双精度六阶的最佳固定 $p=2$ 误差为 $1.20\times10^{-8}$，两种局部选择约为 $8.18\times10^{-9}$。该结果支持局部选择的精度，但不证明计算节省，因为这一事后比较原型仍一次性生成全部候选导数。下文再检验真正提前停止的完整求解成本。
+
+\input{tables_operator_v2/adaptive_p.tex}
+
+对 $p=2$ 改变式\eqref{eq:threshold}中的 $c$，结果见表\ref{tab:c-sweep}。$c=1$ 在四、六阶取得本组最小 RMSE，$c=0.5$ 也处于相近量级；当 $c$ 增至 2 或 4 时，过大的局部区间使截断误差占主导。二阶已接近双精度误差平台，对 $c$ 的区分不明显。因而比例因子仍不能被视为完全免调参数。
+
+\input{tables_operator_v2/c_sweep.tex}
+
+\subsection{高阶自动微分误差审计}
+
+为测量式\eqref{eq:ad-error}中的 $\eta_k$，取三组随机初始化的三隐层、宽度 32 的 $\tanh$ 网络，在 $t=-0.9$、$-0.5$、$0$、$0.5$、$0.9$ 处比较 PyTorch 自动微分与 100 位 Taylor jet。Taylor jet 在每个线性层逐系数传播，并由恒等式 $y'=z'(1-y^2)$ 递推 $y=\tanh z$ 的系数，不使用有限差分。参考值读取相应精度实际存储的参数与坐标，误差相减和尺度化均在高精度中完成。
+
+图\ref{fig:derivative-stopping}给出缩放误差的最大值与中位数。float32 的最大值在零至三阶约为 $10^{-8}$，第六阶为 $5.11\times10^{-7}$，第八阶达到 $1.63\times10^{-6}$；float64 则由低阶约 $10^{-17}$--$10^{-16}$ 增长至第十阶 $5.98\times10^{-15}$。增长并非逐阶单调，反映了导数幅值与链式求导中的相消共同影响误差。这里测量的是有限随机网络上的误差，不是训练中间态的统一上界。
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.66\textwidth]{derivative_error_audit_v2.pdf}
+\caption{100 位 Taylor-jet 参考下的缩放导数误差；每个阶数含三个网络、五个位置。\\Scaled AD errors against a 100-digit Taylor-jet reference, using three networks and five locations per derivative order.}
+\label{fig:derivative-stopping}
+\end{figure}
+
+\subsection{算子预算、端到端训练与多种子检验}
+
+首先在三类解析函数、五个目标点和 256 点 Gauss--Legendre 求积上检验式\eqref{eq:operator-indicator}，取 $\mathrm{tol}_R=10^{-4}$、$\lambda=0.05$，故 $\mathrm{tol}_I=2\times10^{-3}$。高精度参考使用相应浮点格式实际存储的目标坐标、节点和权重，并保留高精度数值直到完成误差相减。记 $E_Q=\sum_j|w_j||\widehat Q_{ij}-Q_{ij}|$，$E_M$ 为解析矩误差，$E_G=|\widehat{\mathcal I}_{m,i}-\mathcal I^G_{m,i}|$ 为完整离散误差。覆盖率比较 $E_Q$ 与加权指标，而非把包含解析矩和求和误差的 $E_G$ 当作差商误差。表\ref{tab:budget-audit}同时报告实际预算满足情况；每行均含 15 个函数--目标点组合。
+
+\input{tables_quality/operator.tex}
+
+该解析函数实验提供截断余项的线段导数界，但未使用神经网络校准的 $\eta_k$，故它不能单独判定神经自动微分误差模型是否失效。算子指标达标、加权差商误差达标和完整离散误差达标应分别报告；任一有限样本上的全覆盖也不构成跨精度认证。
+
+float32 六阶的差商指标覆盖全部 15 个样本，实际加权差商误差也全部满足预算，而完整离散误差仅 9 个样本达标。其 $E_Q$ 的 RMSE 为 $1.83\times10^{-4}$，解析矩误差为 $4.25\times10^{-2}$，乘积、求和与最终加法的合计舍入误差为 $4.11\times10^{-3}$；同一节点规则的真实求积误差仅约 $2.48\times10^{-9}$。这一误差分解表明，本组单精度高阶瓶颈主要来自解析矩计算，不能仅靠提高局部延拓阶数消除，也不能把完整误差未达标直接归因于神经自动微分包络。
+
+完整训练固定网络初值、配置点、求积规则、右端项和优化器。固定 $p=2$ 设置两种实现：全行版本在筛选近场前生成全部高阶导数；按需版本先识别含近场节点的目标行，仅在这些行生成至 $m+2$ 阶。两者公式与阈值相同，用于区分实现节省与阶数选择收益。四阶中 34/48 行需要固定展开，六阶为 48/48 行。三种方法固定单 CPU 线程串行运行，并在三个种子间轮换顺序，结果见表\ref{tab:operator-budget-seeds}。
+
+\input{tables_quality/single.tex}
+
+相较按需固定 $p=2$，四阶准备加训练由 17.67 s 降至 5.68 s，减少 $67.8\%$，解 RMSE 均值由 $4.76\times10^{-4}$ 变为 $3.92\times10^{-4}$。六阶耗时由 156.05 s 降至 67.00 s，减少 $57.1\%$，但解 RMSE 均值由 $1.87\times10^{-3}$ 增至 $2.12\times10^{-3}$，增幅约 $13.0\%$，种子间波动也更大。因而该试验不能支持普遍不损失解精度的结论。按需固定实现虽减少了四阶保存张量载荷，本批次壁钟时间却几乎未变；六阶仍须在全部目标行生成高阶导数。
+
+准备加训练时间包含初始导数包络和训练期更新，不含检验及单次反向成本探针。单函数实验复用图\ref{fig:derivative-stopping}对应的校准资料，其生成成本未计入，故不是完整冷启动耗时。配对试验已在高精度相减的校准版本下重新运行。保存张量指一次完整残差反向传播的保存总载荷，不等于进程或硬件峰值内存。三个种子仅提供描述性比较，不构成非劣效或显著性证据。
+
+表\ref{tab:end-to-end}保留种子 20260918 的探索性分支消融：仅极限替代使用 $p=0$，逐点预算取 $\mathrm{tol}_Q=10^{-3}$，算子预算取 $\mathrm{tol}_R=10^{-4}$。后三项使用早期导数校准，不与新主对照合并作精度排名，也不混用不同批次的耗时。
+
+\begin{table}[H]
+\centering
+\caption{历史分支消融的闭区间解 RMSE（种子 20260918）\\Exploratory branch ablation with the earlier calibration (seed 20260918)}
+\label{tab:end-to-end}
+\small
+\begin{tabular}{lccc}
+\toprule
+方法 & $m=2$ & $m=4$ & $m=6$\\
+\midrule
+固定 $p=2$ & $8.4735\times10^{-4}$ & $5.3022\times10^{-4}$ & $1.7069\times10^{-3}$\\
+固定 $p=3$ & $8.4728\times10^{-4}$ & $5.3835\times10^{-4}$ & $1.6235\times10^{-3}$\\
+仅极限替代，$p=0$ & $8.4722\times10^{-4}$ & $3.8582\times10^{-4}$ & $2.4228\times10^{-3}$\\
+逐点预算，$p\le3$ & $8.4722\times10^{-4}$ & $5.6652\times10^{-4}$ & $1.7647\times10^{-3}$\\
+算子预算，$p\le3$ & $8.4722\times10^{-4}$ & $4.0874\times10^{-4}$ & $1.8954\times10^{-3}$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+仅极限替代在二、四阶给出相近或更小的解误差，而在该六阶样本中误差较大。这说明 $p=0$ 是必要的低成本对照，不能把高阶展开描述为处处必需；单种子差异也不足以证明自适应优于所有固定阶数。逐点预算与算子预算的区别，则在于是否让少数求积权重较小的节点决定整行的最高导数阶数。
+
+\subsection{参数化单网络内插试验}
+
+为检验该策略能否嵌入参数化神经求解器，取 $m=4$，用一个双输入网络 $u_\theta(t,\xi)$ 同时表示
+\begin{equation}
+u(t,\xi)=e^{\xi t},\qquad 0.5\le\xi\le1.5.
+\label{eq:parametric-family}
+\end{equation}
+网络只在 $\xi=0.5,1.0,1.5$ 三个参数处计算方程残差；$\xi=0.625,0.875,1.125,1.375$ 仅用于训练后的内插检验。每次有限部分算子调用固定一个 $\xi$，自动微分只沿 $t$ 方向进行。双输入网络含 3 个宽度为 24 的隐藏层；每个参数使用 32 个配置点和 48 点训练求积，右端项由 128 点求积独立生成。固定 $p=2$ 与算子预算共享初始权重、参数样本、配置点、右端项和优化器。
+
+表\ref{tab:parameterized}采用与单函数相同的全行、按需固定展开和算子预算三方配对。每次预算训练先在三个训练参数与 $t=-0.8,0,0.8$ 上作 90 位校准，取缩放 AD 误差最大值与 $2\eps$ 的较大者，再乘安全系数 8。准备时间包含该次校准，不能只报训练循环耗时。固定展开的近场涉及 20/32 个目标行。该试验仅检验三个训练参数与四个未见参数之间的内插，不代表高维参数或多工况应用优势。
+
+\input{tables_quality/parameterized.tex}
+
+与按需固定展开相比，包含本次高精度校准的准备加训练时间由 24.43 s 降至 6.46 s，减少 $73.6\%$，未见参数上的解 RMSE 均值均约 $2.0\times10^{-2}$。终态配置行均可通过直接差商预算，故该试验主要说明方法能识别无需局部展开的温和情形，而非证明复杂参数问题上的求解优势。
+
+\subsection{神经配置结果与谱基线}
+
+共享同一稳定算子的 Chebyshev 配置在二、四、六阶的解 RMSE 分别为 $1.78\times10^{-14}$、$3.70\times10^{-14}$ 和 $5.93\times10^{-11}$，对应计算时间为 0.34、0.30 和 1.58 s。它在本组一维光滑问题中明显优于神经配置，因而本文的计算收益只指神经求解器内部的算子求值改进，不是对传统方法的整体性能优势。六阶神经误差仍高于二、四阶，也不能据可训练性推断阶数无关的精度。
+
+为直接检验相消控制对训练的作用，在相同六阶网络、数据、优化步数和随机种子下，仅把训练算子从平衡延拓改为只在严格对角线上延拓的直接差商。三种子对照结果列于表\ref{tab:direct-neural}。直接差商的三次优化都能结束，但解 RMSE 和验证残差分别是平衡延拓的约 126 倍和 335 倍。这说明相消误差不一定表现为 NaN 或训练中断，也可能形成一个数值上错误却仍可被优化的残差面。
+
+\begin{table}[H]
+\centering
+\caption{六阶神经训练中的直接差商与平衡延拓（均值$\pm$标准差，3 个随机种子）\\Direct subtraction versus balanced continuation in sixth-order neural training (mean$\pm$standard deviation, three seeds)}
+\label{tab:direct-neural}
+\small
+\begin{tabular}{lccc}
+\toprule
+方法 & 闭区间解 RMSE & 内点残差 RMSE & 成功次数\\
+\midrule
+直接差商 & $(2.264\pm0.388)\times10^{-1}$ & $(1.980\pm0.272)\times10^{-1}$ & 3/3\\
+平衡延拓，$p=2$ & $(1.804\pm0.140)\times10^{-3}$ & $(5.91\pm1.94)\times10^{-4}$ & 3/3\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{函数族与非线性补充试验}
+
+在六阶单种子压力试验中，$u=(1+0.5t)^{-1}$ 的解 RMSE 为 $2.45\times10^{-3}$，$u=\sin(\pi t)$ 为 $3.61\times10^{-2}$；对应残差 RMSE 分别为 $1.69\times10^{-3}$ 和 $2.53\times10^{-3}$。当前配置在正弦算例上的误差较大，但尚未分离逼近、优化和算子误差的贡献。两项均只有一个随机种子，不与三种子主结果作同等强度的统计结论。
+
+四阶非线性方程取 $u=e^t$、$\mu=0.1$。三种子解 RMSE 为 $(3.61\pm0.73)\times10^{-4}$，内点残差 RMSE 为 $(1.024\pm0.244)\times10^{-3}$，3 次训练均成功。该结果只说明一个温和非线性算例可由同一算子框架处理，不能外推到六阶强非线性方程。
+
+\section{讨论}
+
+实验区分了两个作用：局部延拓处理直接差商的近场相消，求积权重预算减少达到给定离散精度所需的高阶导数。前者须与直接分支和纯局部展开比较，后者须与按需固定展开比较。三种子结果支持后者在所测 CPU、网络和容差下保持解误差量级并降低计算代价，但尚未覆盖固定 $p=0,1,2,3$ 的完整多种子精度--成本边界，也未与优化的 Taylor 模式自动微分后端比较\cite{Dangel2025}。因而不能把当前加速倍数视为与实现无关的算法优势。
+
+理论上的主要限制是误差指标的可靠性。九次预算训练在第 100 步更新前均观测到所需余项阶数的导数超过旧 $B_k$，说明初态包络不能直接沿用到训练后期；这一现象本身尚不等于实际差商超出预算。$B_k$ 与 $\eta_k$ 的训练轨迹覆盖、切换后的参数梯度误差仍需独立高精度审计。命题 3 又依赖尚不可计算的稳定常数和正则性界，故神经训练预算不是解误差证书。float32 六阶的分解还说明，差商预算之外的解析矩与累加误差须单独处理。
+
+应用证据目前限于一维光滑制造问题，参数试验也只检验区间内插；Chebyshev 配置在这些问题上仍更快、更准。因而尚需独立收敛参考支持的非制造问题，以及计入校准的完整成本，才能判断该方法在实际求解中的价值。公式适用于一般整数阶，但实验最高为六阶，也不覆盖端点正则性不足的解。
+
+\section{结论}
+
+本文将直接差商与局部 Taylor 延拓的候选误差按求积权重聚合，并据此逐行停止高阶自动微分。当候选指标为有效上界时，该方法控制同一求积规则下的差商替换误差；完整算子和解误差仍需其余误差项与稳定性条件。相较近场按需的固定 $p=2$，三种子四、六阶准备加训练时间分别减少约 $67.8\%$ 和 $57.1\%$，但六阶平均解 RMSE 增加约 $13.0\%$；这两项复用了既有校准资料。当前证据支持把该策略作为神经配置内部的精度--成本折中，不支持普遍保持解精度、跨精度认证或优于谱方法的主张。下一步应先检验训练轨迹上的指标与梯度可靠性，再扩展应用范围。
+
+\vspace{0.5em}
+\noindent\textbf{基金项目：}省部级及以上基金名称和编号（待补）。
+
+\noindent\textbf{作者简介：}姓名、出生年、性别、籍贯、职称/学历与研究方向（待补）。
+
+\noindent\textbf{通信作者：}姓名及电子邮箱（待补）。
+
+\begin{thebibliography}{99}
+\small
+\bibitem{Toh1994}
+TOH K C, MUKHERJEE S. Hypersingular and finite part integrals in the boundary element method[J]. International Journal of Solids and Structures, 1994, 31(17): 2299--2312. DOI: 10.1016/0020-7683(94)90153-8.
+
+\bibitem{Monegato1996}
+MONEGATO G. Some numerical algorithms to evaluate Hadamard finite-part integrals[J]. Journal of Computational and Applied Mathematics, 1996, 70(1): 75--93. DOI: 10.1016/0377-0427(95)00134-4.
+
+\bibitem{Carley2009}
+CARLEY M. Numerical quadratures for near-singular and near-hypersingular integrals in boundary element methods[J]. Mathematical Proceedings of the Royal Irish Academy, 2009, 109(1): 49--60. DOI: 10.3318/PRIA.2008.109.1.49.
+
+\bibitem{Sidi2014}
+SIDI A. Analysis of errors in some recent numerical quadrature formulas for periodic singular and hypersingular integrals via regularization[J]. Applied Numerical Mathematics, 2014, 81: 30--39. DOI: 10.1016/j.apnum.2014.02.011.
+
+\bibitem{Sidi2021}
+SIDI A. Unified compact numerical quadrature formulas for Hadamard finite parts of singular integrals of periodic functions[J]. Calcolo, 2021, 58: 22. DOI: 10.1007/s10092-021-00407-8.
+
+\bibitem{Sidi2022}
+SIDI A. PVTSI$^{(m)}$: A novel approach to computation of Hadamard finite parts of nonperiodic singular integrals[J]. Calcolo, 2022, 59: 7. DOI: 10.1007/s10092-021-00446-1.
+
+\bibitem{Sidi2024}
+SIDI A. Spectrally accurate numerical quadrature formulas for a class of algebraically singular periodic Hadamard finite part integrals by regularization[J]. Journal of Computational and Applied Mathematics, 2024, 439: 115581.
+
+\bibitem{Krantz2026}
+KRANTZ D, BARNETT A H, TORNBERG A K. Stabilizing the singularity swap quadrature for near-singular line integrals[J]. BIT Numerical Mathematics, 2026, 66: 39. DOI: 10.1007/s10543-026-01132-w.
+
+\bibitem{Higham2002}
+HIGHAM N J. Accuracy and Stability of Numerical Algorithms[M]. 2nd ed. Philadelphia: SIAM, 2002. DOI: 10.1137/1.9780898718027.
+
+\bibitem{Baydin2018}
+BAYDIN A G, PEARLMUTTER B A, RADUL A A, et al. Automatic differentiation in machine learning: a survey[J]. Journal of Machine Learning Research, 2018, 18(153): 1--43.
+
+\bibitem{Dangel2025}
+DANGEL F, SIEBERT T, ZEINHOFER M, et al. Collapsing Taylor Mode Automatic Differentiation[EB/OL]. arXiv:2505.13644, 2025. \url{https://arxiv.org/abs/2505.13644}.
+
+\bibitem{Raissi2019}
+RAISSI M, PERDIKARIS P, KARNIADAKIS G E. Physics-informed neural networks: A deep learning framework for solving forward and inverse problems involving nonlinear partial differential equations[J]. Journal of Computational Physics, 2019, 378: 686--707. DOI: 10.1016/j.jcp.2018.10.045.
+
+\bibitem{Yuan2022}
+YUAN L, NI Y Q, DENG X Y, et al. A-PINN: Auxiliary physics informed neural networks for forward and inverse problems of nonlinear integro-differential equations[J]. Journal of Computational Physics, 2022, 462: 111260. DOI: 10.1016/j.jcp.2022.111260.
+
+\bibitem{Rezaei2025}
+ZEHTABIAN REZAEI S, MAHMOUDI Y, BAGHMISHEH M. Application of feed-forward neural networks for solving linear and nonlinear integral equations with hypersingular kernels[J]. Physica Scripta, 2025, 100(12): 125215. DOI: 10.1088/1402-4896/ae239a.
+
+\bibitem{Trefethen2000}
+TREFETHEN L N. Spectral Methods in MATLAB[M]. Philadelphia: SIAM, 2000.
+
+\bibitem{Liu2026}
+刘泳成, 黄睿, 俞靓文, 等. 融合数学物理知识的神经网络算子方法[J]. 四川大学学报(自然科学版), 2026, 63(1): 100--110. DOI: 10.19907/j.0490-6756.250138.
+
+\bibitem{Yang2026Stokes}
+杨楠, 刘文艺, 周言信, 等. 一种求解 Stokes 问题的深度学习混合方法[J]. 四川大学学报(自然科学版), 2026, 63(1): 58--64. DOI: 10.19907/j.0490-6756.240113.
+
+\end{thebibliography}
+
+\end{document}

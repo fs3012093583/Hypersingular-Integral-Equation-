@@ -1,9 +1,19 @@
 # Current work
 
-- Goal achieved: the Taylor-subtraction PINN solved the blackboard constant-solution hypersingular equation on `[-0.95, 0.95]`.
-- Added isolated implementation and tests; preserved the pre-existing user changes in `Neraul_Singularity_Removal_by_Subtraction.py` and `neural_solver_ln2_approx.py`.
-- Verification: 4 tests pass, including constant, affine, quadratic/diagonal-limit, and deterministic training checks.
-- Full run: seed 20260916, float64 CPU, 96 training quadrature points, independent 192-point residual validation.
-- Result: max solution error `1.2120e-4`, RMS solution error `2.3792e-5`, independent RMS equation residual `7.0999e-4`.
-- Outputs: `results/hypersingular_constant_subtraction/metrics.json` and ignored PNG `solution.png` in the same directory.
-- Next: if requested, extend the same operator to the paper's parameterized solution `u(t)=1+gamma*t` and its `a(t), b(t)` equation.
+- Updated 2026-09-19T22:40:43+08:00. Goal: improve the theory, evidence and concise manuscript toward a defensible numerical-analysis paper. Journal formatting and submission are out of scope; goal remains active.
+- **All jobs finished.** Exec 49669 exited 0 after BOTH calibration-v2 serial batches: 18 single-function records and 9 parameterized records. Do not rerun or poll that closed handle. Current batches are `results/lazy_fixed_quality_single_calibration_v2_20260919` and `results/lazy_fixed_quality_parameterized_calibration_v2_20260919`; old batches remain historical.
+- Source hashes match each protocol, archived sources/calibration and live training dependencies. The table generator now rejects mismatched configurations across methods or seeds in addition to checking paired initialization.
+- New lazy fixed-p2 / budget means: m4 RMSE 4.76493e-4 / 3.92465e-4, setup+training 17.6733 / 5.6848 s; m6 RMSE 1.87252e-3 / 2.11504e-3, 156.0459 / 66.9979 s. Savings 67.8% / 57.1%, but m6 mean error INCREASES 13.0%, so universally preserved accuracy is unsupported. Single-function timings reuse offline calibration and exclude its generation.
+- Parameterized m4 lazy/budget held-out RMSE 1.99686e-2 / 1.99622e-2; setup+training 24.4335 / 6.4580 s, including per-run MP calibration. Terminal selections are all direct; this is a mild interpolation case.
+- Important observation: all nine budget runs had required remainder-derivative AD magnitudes exceed the previous B envelope at the first 100-step refresh. This is observed envelope failure, NOT proof that quotient errors exceeded budget. No checkpoint trajectory or parameter-gradient MP audit has yet been run.
+- Corrected stored-input/MP-subtraction references are complete. Float32 m6 quotient coverage and actual quotient budget are 15/15, full discrete budget 9/15. Moment RMSE 4.2485e-2 dominates weighted quotient RMSE 1.8286e-4. That analytic-function experiment does not test the neural eta calibration.
+- The conditional theory separates quotient replacement, quadrature, moments, accumulation and residual assembly. Explicit unresolved-budget diagnostics and optional strict failure are implemented; neither modeled success nor finite empirical coverage is a certificate.
+- Current PDF: `output/pdf/quality_revision_calibration_v2_20260919/main.pdf`, **15 pages**, independently versioned. All pages inspected; final tables 6/7 and 8/9 are in reading order; no undefined refs, overfull boxes or internal paths. Small font/underfull warnings remain. The prior 19-page draft and intermediate 15-page PDF are preserved.
+- Methods text now matches actual training: online B with safety 4, rounding safety 4/truncation safety 2, no hard trust radius for budget training, and detached discrete branch decisions. Main paired tables use v2; the old single-seed branch ablation is explicitly historical.
+- Verification: **115 pytest tests passed**, final run 4.70 s; diff check clean. Local Mac CPU only, remote not rechecked. Preserve the large pre-existing dirty/staged tree; no commits/resets.
+
+## Next
+
+1. Follow `reports/training_reliability_audit_plan.md`: capture actual Adam/L-BFGS checkpoints and active envelopes in an independent audit run, including before refresh and rejected line-search trials. Verify observation hooks do not change deterministic training.
+2. Separate MP-reference AD-error coverage, B-magnitude observations, actual weighted quotient budgets, moment/sum errors and branch-frozen parameter gradients. Never call a budget pass from a stale indicator a certificate.
+3. If errors are found, locate the cause before changing policy. Then compare full matched fixed p=0/1/2/3 and optimized AD backends at comparable accuracy; only afterward expand to a nonmanufactured application. Do not repeat cheap manufactured cases to imply novelty.

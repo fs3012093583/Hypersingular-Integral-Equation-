@@ -1,0 +1,463 @@
+% !TEX program = xelatex
+\documentclass[UTF8,fontset=none,11pt,a4paper]{ctexart}
+
+\usepackage[left=2.15cm,right=2.15cm,top=2.25cm,bottom=2.25cm]{geometry}
+\usepackage{amsmath,amssymb,booktabs,graphicx}
+\usepackage[table]{xcolor}
+\usepackage{hyperref,float,enumitem,caption}
+\setCJKmainfont{Songti SC}
+\setCJKsansfont{PingFang SC}
+\setmainfont{Times New Roman}
+\hypersetup{hidelinks}
+\graphicspath{{figures/}}
+\setlength{\parindent}{2em}
+\setlength{\parskip}{0.25em}
+\setlist{nosep,leftmargin=2em}
+\renewcommand{\arraystretch}{1.15}
+\captionsetup{font=small,labelsep=quad}
+
+\newcommand{\HE}{\mathcal H_{\mathrm E}}
+\newcommand{\HT}{\mathcal H_{\mathrm T}}
+\newcommand{\HU}{\mathcal H_{\mathrm U}}
+\newcommand{\rms}{\operatorname{RMSE}}
+\newcommand{\best}[1]{\cellcolor{gray!15}\textbf{#1}}
+
+\title{\bfseries 超奇异积分方程的神经网络数值实验报告\\[0.4em]
+\large 有限部分公式、端点修正与不同奇异阶数的对照}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+
+% \begin{abstract}
+% 本文汇总神经网络求解有限部分奇异积分方程的一组阶段性数值实验。研究首先核对二阶超奇异核的两种正确正则化表示：端点值--导数差公式与完整 Taylor 消去公式；随后将遗漏端点修正的导数差商表达作为诊断对象，比较其对训练和解误差的影响。在此基础上，实验依次覆盖常数解、仿射参数解、二次及三次解析解、一次与三次奇异核，以及解析解为 $u(t)=t$ 和 $u(t)=t^2$ 的直接积分方程。全部计算采用双精度三层双曲正切网络，并以独立的高阶求积重新检验方程残差。结果表明：两个正确公式在同一网络上的算子差通常为 $10^{-10}$ 至 $10^{-9}$；三次核下因高阶差商的舍入放大，差值约为 $10^{-7}$；一次核的分部积分式保留弱对数奇性，普通 Gauss--Legendre 求积下差值约为 $10^{-4}$。各组实验均完成确定性复跑，损失历史与主要指标逐项一致。
+% \end{abstract}
+
+\section{研究问题与公式}
+
+\subsection{二阶超奇异积分}
+
+考虑区间 $(-1,1)$ 上的 Hadamard 有限部分积分
+\begin{equation}
+\mathcal H[u](t)=\operatorname{f.p.}\!\int_{-1}^{1}
+\frac{u(\tau)}{(\tau-t)^2}\,\mathrm d\tau,
+\qquad -1<t<1.
+\end{equation}
+积分核在 $\tau=t$ 处具有二阶极点，普通反常积分发散，必须在有限部分意义下解释。
+
+正确的端点值公式表示为
+\begin{align}
+\HE[u](t)={}&
+-\frac{u(1)}{1-t}-\frac{u(-1)}{1+t}
++u'(t)\ln\frac{1-t}{1+t}\nonumber\\
+&+\int_{-1}^{1}
+\frac{u'(\tau)-u'(t)}{\tau-t}\,\mathrm d\tau .
+\label{eq:endpoint}
+\end{align}
+最后一个被积函数在 $\tau=t$ 处连续延拓为 $u''(t)$。
+
+完整 Taylor 消去表示为
+\begin{align}
+\HT[u](t)={}&
+-u(t)\left(\frac{1}{1-t}+\frac{1}{1+t}\right)
++u'(t)\ln\frac{1-t}{1+t}\nonumber\\
+&+\int_{-1}^{1}
+\frac{u(\tau)-u(t)-u'(t)(\tau-t)}{(\tau-t)^2}
+\,\mathrm d\tau .
+\label{eq:taylor}
+\end{align}
+该式的对角连续极限为 $u''(t)/2$。对光滑函数，式\eqref{eq:endpoint}与式\eqref{eq:taylor}严格等价。
+
+早期讨论中还使用过如下未修正表达：
+\begin{align}
+\HU[u](t)={}&
+-u(t)\left(\frac{1}{1-t}+\frac{1}{1+t}\right)
++u'(t)\ln\frac{1-t}{1+t}\nonumber\\
+&+\int_{-1}^{1}
+\frac{u'(\tau)-u'(t)}{\tau-t}\,\mathrm d\tau .
+\label{eq:uncorrected}
+\end{align}
+它把式\eqref{eq:endpoint}的端点值替换成了 $u(t)$，又保留导数差积分，因此一般不等于有限部分算子。由分部积分可得
+\begin{equation}
+\HU[u](t)-\HT[u](t)
+=\frac{u(1)-u(t)}{1-t}
++\frac{u(-1)-u(t)}{1+t}.
+\label{eq:uncorrected_difference}
+\end{equation}
+对于常数和一次函数，式\eqref{eq:uncorrected_difference}为零；对于 $u(t)=t^2$，差值恒为 $2$。因此，仿射算例只能检验数值稳定性，不能充分揭示公式层面的偏差。
+
+\subsection{一般整数阶推广}
+
+记
+\begin{equation}
+\mathcal I_m[u](t)=\operatorname{f.p.}\!\int_a^b
+\frac{u(\tau)}{(\tau-t)^m}\,\mathrm d\tau,
+\qquad a<t<b.
+\end{equation}
+第一种写法是完整 Taylor 消去版本。减去 $m-1$ 阶 Taylor 多项式后，有
+\begin{align}
+\mathcal I_m[u](t)={}&
+\sum_{k=0}^{m-2}\frac{u^{(k)}(t)}{k!}
+\frac{(a-t)^{-(m-k-1)}-(b-t)^{-(m-k-1)}}{m-k-1}
+\nonumber\\
+&+\frac{u^{(m-1)}(t)}{(m-1)!}
+\ln\left|\frac{b-t}{a-t}\right|\nonumber\\
+&+\int_a^b
+\frac{u(\tau)-\displaystyle\sum_{k=0}^{m-1}
+u^{(k)}(t)(\tau-t)^k/k!}{(\tau-t)^m}\,\mathrm d\tau.
+\label{eq:general_taylor}
+\end{align}
+最后一个被积函数在对角位置的连续极限为 $u^{(m)}(t)/m!$。
+
+第二种写法是端点值--导数差版本。对于 $m\ge 2$，先由分部积分得到递推关系
+\begin{equation}
+\mathcal I_m[u](t)
+=-\frac{1}{m-1}
+\left[\frac{u(\tau)}{(\tau-t)^{m-1}}\right]_a^b
++\frac{1}{m-1}\mathcal I_{m-1}[u'](t),
+\label{eq:general_endpoint_recurrence}
+\end{equation}
+将递推关系连续展开，并对最后的 Cauchy 主值积分减去 $u^{(m-1)}(t)$，即可得到完整的端点公式
+\begin{align}
+\mathcal I_m[u](t)={}&
+-\sum_{j=0}^{m-2}\frac{(m-j-2)!}{(m-1)!}
+\left[
+\frac{u^{(j)}(\tau)}{(\tau-t)^{m-j-1}}
+\right]_a^b
+\nonumber\\
+&+\frac{u^{(m-1)}(t)}{(m-1)!}
+\ln\left|\frac{b-t}{a-t}\right|
+\nonumber\\
+&+\frac{1}{(m-1)!}\int_a^b
+\frac{u^{(m-1)}(\tau)-u^{(m-1)}(t)}{\tau-t}\,\mathrm d\tau,
+\qquad m\ge 2.
+\label{eq:general_endpoint}
+\end{align}
+式\eqref{eq:general_endpoint}中的求和项依次含有
+$u,u',\ldots,u^{(m-2)}$ 在 $a,b$ 两端的值；最后一个被积函数在
+$\tau=t$ 处连续延拓为 $u^{(m)}(t)$。当 $m=2$ 时，它正好退化为式\eqref{eq:endpoint}；
+当 $m=3$ 时，端点项同时包含 $u(a),u(b),u'(a),u'(b)$。
+式\eqref{eq:general_taylor}与式\eqref{eq:general_endpoint}是同一个有限部分算子的两种等价表示：
+前者使用展开点 $t$ 处的低阶导数，后者使用区间端点处的函数值与导数值。
+
+\section{数值方法与评价口径}
+
+神经网络采用三层全连接结构，每层宽度为 32，激活函数为 $\tanh$。所有计算使用双精度浮点数，导数由自动微分获得。配置点采用余弦分布并位于 $[-0.97,0.97]$；正则积分采用 Gauss--Legendre 求积。主要设置见表\ref{tab:config}。
+
+\begin{table}[H]
+\centering
+\caption{主要计算设置}
+\label{tab:config}
+\begin{tabular}{ll}
+\toprule
+项目 & 设置\\
+\midrule
+隐藏层与宽度 & 3 层，每层 32 个神经元\\
+激活函数 & $\tanh$\\
+数值精度 & 双精度\\
+Adam & 3000 步，学习率 $2\times10^{-3}$\\
+L-BFGS & 常数基线 300 步，其余算例最大迭代 400 步\\
+配置点 & 96 个，范围 $[-0.97,0.97]$\\
+训练求积 & 96 点 Gauss--Legendre\\
+独立检验求积 & 192 点 Gauss--Legendre\\
+解误差点数 & 201 个\\
+随机种子 & 20260916\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+解的均方根误差定义为
+\begin{equation}
+\rms_u=\left[\frac1N\sum_{j=1}^{N}
+\bigl(u_{\theta}(t_j)-u_{\mathrm{exact}}(t_j)\bigr)^2\right]^{1/2}.
+\end{equation}
+早期修正与未修正诊断实验的解误差区间为 $[-0.95,0.95]$；后续端点公式、非线性解析解、不同奇异阶数及单项式实验均在完整区间 $[-1,1]$ 上统计解误差，包含两个端点。为避免不同训练归一化方式造成混淆，结果汇总只比较上述定义一致的解 RMSE。
+
+为便于逐组查阅，正式实验结果分别列在对应小节中。各表只报告解的均方根误差，不再列出训练损失、最大绝对误差、方程残差或交叉算子误差。记号
+$\mathcal H_{\mathrm E}$、$\mathcal H_{\mathrm T}$ 和 $\mathcal H_{\mathrm U}$
+分别表示正确端点公式、完整 Taylor 公式和未修正导数差公式；
+$\mathcal I_{m,\mathrm E}$ 与 $\mathcal I_{m,\mathrm T}$ 表示 $m$ 阶核的端点或分部积分形式与 Taylor 消去形式。
+除表中单独标出的随机种子外，其余训练均使用随机种子 20260916。
+
+
+\section{二阶核的基础与诊断实验}
+
+\subsection{常数解方程}
+
+第一题为
+\begin{equation}
+\operatorname{f.p.}\!\int_{-1}^{1}
+\frac{u(\tau)}{(\tau-t)^2}\,\mathrm d\tau
+=\frac{2}{(t-1)(t+1)},
+\end{equation}
+解析解为 $u(t)=1$。三种训练均采用上式，只把左端算子分别写成
+$\mathcal H_{\mathrm T}$、$\mathcal H_{\mathrm U}$ 和 $\mathcal H_{\mathrm E}$。
+完整 Taylor 公式与未修正公式的早期结果均在 $[-0.95,0.95]$ 上统计，可以直接横向比较；正确端点公式是在完整区间 $[-1,1]$ 上进行的复算，只作为补充结果列在右侧，不能与前两列作严格的同口径比较。
+
+\begin{table}[H]
+\centering
+\caption{常数解方程的解 RMSE 对照}
+\label{tab:constant_results}
+\begin{tabular}{cccc}
+\toprule
+& \multicolumn{2}{c}{同区间诊断：$[-0.95,0.95]$} & 完整区间复算：$[-1,1]$\\
+\cmidrule(lr){2-3}\cmidrule(l){4-4}
+解析解 & 完整 Taylor $\mathcal H_{\mathrm T}$ & 未修正 $\mathcal H_{\mathrm U}$ & 正确端点 $\mathcal H_{\mathrm E}$\\
+\midrule
+$u(t)=1$ & \best{$2.3792\times10^{-5}$} & $1.0011\times10^{-4}$ & $4.1080\times10^{-5}$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+同区间诊断中，未修正公式的解 RMSE 是完整 Taylor 公式的 4.21 倍。表中灰底粗体表示同一统计口径下较小的 RMSE；正确端点列因统计区间不同，不参与该标记。由于常数解析解同时满足两个算子，这一差异主要反映离散求积与非凸优化路径的数值敏感性。
+
+\subsection{仿射参数方程}
+
+第二题为
+\begin{equation}
+t^4u(t)+(2-t)(1+t)\mathcal H[u](t)=f_{\gamma}(t),
+\qquad u_{\gamma}(t)=1+\gamma t,
+\end{equation}
+参数取 $\gamma=0,0.1,0.5,1,5,10$。表\ref{tab:affine_diag}把同一 $\gamma$ 下的三个结果放在同一行：前两列分别对应
+\begin{equation*}
+\begin{aligned}
+t^4u+(2-t)(1+t)\mathcal H_{\mathrm T}[u]&=f_\gamma,\\
+t^4u+(2-t)(1+t)\mathcal H_{\mathrm U}[u]&=f_\gamma,
+\end{aligned}
+\end{equation*}
+并采用相同的 $[-0.95,0.95]$ 统计区间；最右列对应把算子换成 $\mathcal H_{\mathrm E}$ 后在 $[-1,1]$ 上进行的复算，因此只作补充参考。
+
+\begin{table}[H]
+\centering
+\caption{仿射参数方程的解 RMSE 对照}
+\label{tab:affine_diag}
+\begin{tabular}{cccc}
+\toprule
+& \multicolumn{2}{c}{同区间诊断：$[-0.95,0.95]$} & 完整区间复算：$[-1,1]$\\
+\cmidrule(lr){2-3}\cmidrule(l){4-4}
+$\gamma$ & 完整 Taylor $\mathcal H_{\mathrm T}$ & 未修正 $\mathcal H_{\mathrm U}$ & 正确端点 $\mathcal H_{\mathrm E}$\\
+\midrule
+0 & \best{$8.7450\times10^{-5}$} & $1.9144\times10^{-4}$ & $1.0162\times10^{-4}$\\
+0.1 & \best{$1.0159\times10^{-4}$} & $3.3983\times10^{-4}$ & $1.1184\times10^{-4}$\\
+0.5 & \best{$2.5984\times10^{-4}$} & $6.8437\times10^{-4}$ & $3.0496\times10^{-4}$\\
+1 & \best{$1.6832\times10^{-4}$} & $3.3527\times10^{-4}$ & $1.7655\times10^{-4}$\\
+5 & \best{$6.1745\times10^{-3}$} & $1.3975\times10^{-2}$ & $7.6768\times10^{-3}$\\
+10 & \best{$3.8989\times10^{-4}$} & $6.2320\times10^{-3}$ & $1.8394\times10^{-3}$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+六个参数点上，未修正公式的 RMSE 均高于同口径的完整 Taylor 结果。灰底粗体只标记前两列同区间诊断中的较小值；正确端点列不参与该标记。由于解析解仍为仿射函数，这组结果属于数值稳定性诊断，不能单独用来证明式\eqref{eq:uncorrected_difference}造成了函数空间中的系统偏差。
+
+\section{两个正确公式的非线性解析解对照}
+
+\subsection{二次解析解}
+
+取
+\begin{equation}
+u(t)=1+t+\eta t^2,
+\qquad \eta=0,0.1,0.5,1.
+\end{equation}
+对于完整 Taylor 公式，正则积分为 $2\eta$；对于端点公式，导数差积分为 $4\eta$。边界项不同，但两个完整算子严格相等。表\ref{tab:quadratic_results}的两列分别对应
+\begin{equation*}
+\begin{aligned}
+t^4u+(2-t)(1+t)\mathcal H_{\mathrm E}[u]&=f_\eta,\\
+t^4u+(2-t)(1+t)\mathcal H_{\mathrm T}[u]&=f_\eta.
+\end{aligned}
+\end{equation*}
+各参数的两种方法以及 $\eta=1$ 的三个随机种子结果均按同一行排列，误差统计区间均为 $[-1,1]$。
+
+\begin{table}[H]
+\centering
+\caption{二次解析解中两个正确公式的解 RMSE 对照}
+\label{tab:quadratic_results}
+\begin{tabular}{ccc}
+\toprule
+$\eta$/随机种子 & 正确端点 $\mathcal H_{\mathrm E}$ & 完整 Taylor $\mathcal H_{\mathrm T}$\\
+\midrule
+0 & $1.3616\times10^{-3}$ & \best{$1.3598\times10^{-3}$}\\
+0.1 & $1.9444\times10^{-3}$ & $1.9444\times10^{-3}$\\
+0.5 & \best{$3.9826\times10^{-3}$} & $3.9843\times10^{-3}$\\
+$1/20260916$ & $5.7331\times10^{-3}$ & \best{$2.1823\times10^{-3}$}\\
+$1/20260917$ & \best{$1.4542\times10^{-3}$} & $4.9422\times10^{-3}$\\
+$1/20260918$ & \best{$9.2826\times10^{-4}$} & $1.1001\times10^{-3}$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+灰底粗体表示同一行中较小的 RMSE；两值相同时不作标记。不同随机种子下两种公式的 RMSE 排序发生反转，三种子平均 RMSE 接近。因此，单次训练的差异属于非凸优化分叉，不能解释为连续公式不等价。
+
+\subsection{三次解析解}
+
+进一步取
+\begin{equation}
+u(t)=1+t+t^2+\xi t^3,
+\qquad \xi=0,0.1,0.5,1.
+\end{equation}
+Taylor 正则积分为 $2+4\xi t$，端点导数差积分为 $4+6\xi t$。表\ref{tab:cubic_results}的两列分别对应
+\begin{equation*}
+\begin{aligned}
+t^4u+(2-t)(1+t)\mathcal H_{\mathrm E}[u]&=f_\xi,\\
+t^4u+(2-t)(1+t)\mathcal H_{\mathrm T}[u]&=f_\xi,
+\end{aligned}
+\end{equation*}
+并在完整区间 $[-1,1]$ 上统计解 RMSE。
+
+\begin{table}[H]
+\centering
+\caption{三次解析解中两个正确公式的解 RMSE 对照}
+\label{tab:cubic_results}
+\begin{tabular}{ccc}
+\toprule
+$\xi$ & 正确端点 $\mathcal H_{\mathrm E}$ & 完整 Taylor $\mathcal H_{\mathrm T}$\\
+\midrule
+0 & $5.7331\times10^{-3}$ & \best{$2.1823\times10^{-3}$}\\
+0.1 & \best{$2.0216\times10^{-3}$} & $2.0382\times10^{-3}$\\
+0.5 & \best{$2.2667\times10^{-3}$} & $5.5844\times10^{-3}$\\
+1 & $2.1118\times10^{-3}$ & \best{$1.7402\times10^{-3}$}\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+三次项实验中，同一行较小的 RMSE 以灰底粗体标出。较小值随 $\xi$ 改变；结合解析推导可知连续算子相同，而独立训练结果受优化路径影响。
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.96\textwidth]{complete_experiment_summary.pdf}
+\caption{各组实验的解 RMSE 概览，纵轴采用对数尺度。}
+\label{fig:summary}
+\end{figure}
+
+\section{一次核与三次核的推广实验}
+
+取统一解析解
+\begin{equation}
+u(t)=1+t+t^2+t^3
+\end{equation}
+并构造
+\begin{equation}
+t^4u(t)+(2-t)(1+t)\mathcal I_m[u](t)=f_m(t),
+\qquad m=1,3.
+\end{equation}
+
+一次核为 Cauchy 主值积分。其 Taylor 消去式为
+\begin{equation}
+\mathcal I_1[u](t)=u(t)\ln\frac{1-t}{1+t}
++\int_{-1}^{1}\frac{u(\tau)-u(t)}{\tau-t}\,\mathrm d\tau.
+\end{equation}
+对应的分部积分式含有
+$[u'(\tau)-u'(t)]\ln|\tau-t|$，仍保留弱对数奇性。
+
+三次核的 Taylor 消去式为
+\begin{align}
+\mathcal I_3[u](t)={}&
+\frac{u(t)}2\left[\frac1{(1+t)^2}-\frac1{(1-t)^2}\right]
+-u'(t)\left(\frac1{1+t}+\frac1{1-t}\right)\nonumber\\
+&+\frac{u''(t)}2\ln\frac{1-t}{1+t}
++\int_{-1}^{1}\frac{u(\tau)-u(t)-u'(t)(\tau-t)
+-\tfrac12u''(t)(\tau-t)^2}{(\tau-t)^3}\,\mathrm d\tau.
+\end{align}
+端点形式同时含有 $u(\pm1)$ 和 $u'(\pm1)$。为抑制三阶差商的浮点相消，近对角区域使用包含四阶导数项的局部 Taylor 展开。
+
+一次核与三次核分别采用端点或分部积分形式和 Taylor 消去形式训练。表\ref{tab:order_results}的两列分别把式(16)中的算子写成 $\mathcal I_{m,\mathrm E}$ 和 $\mathcal I_{m,\mathrm T}$，并在完整区间 $[-1,1]$ 上统计解 RMSE。
+
+\begin{table}[H]
+\centering
+\caption{一次核与三次核的两种公式解 RMSE 对照}
+\label{tab:order_results}
+\begin{tabular}{ccc}
+\toprule
+$m$ & 端点或分部积分 $\mathcal I_{m,\mathrm E}$ & Taylor 消去 $\mathcal I_{m,\mathrm T}$\\
+\midrule
+1 & $4.8507\times10^{-4}$ & \best{$4.4207\times10^{-4}$}\\
+3 & \best{$9.0657\times10^{-3}$} & $1.6924\times10^{-2}$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+灰底粗体表示同一奇异阶数下较小的 RMSE。一次核的分部积分式保留弱对数奇性，普通 Gauss--Legendre 求积的离散精度受限；三次核的解 RMSE 达到 $10^{-2}$ 量级，反映出高阶奇异核更强的端点增长与数值条件性。图\ref{fig:orders}显示两组近似解在完整区间上的误差分布。
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.96\textwidth]{kernel_order_solution_errors.png}
+\caption{一次核与三次核的完整区间预测误差。}
+\label{fig:orders}
+\end{figure}
+
+\section{线性与二次单项式直接方程}
+
+最后考察不带附加系数的直接方程
+\begin{equation}
+\operatorname{f.p.}\!\int_a^b\frac{u(x)}{(x-t)^2}\,\mathrm dx=f(t).
+\end{equation}
+当 $u(x)=x$ 时，
+\begin{equation}
+f_1(t)=\ln\left|\frac{b-t}{a-t}\right|
++t\left(\frac1{a-t}-\frac1{b-t}\right).
+\end{equation}
+当 $u(x)=x^2$ 时，
+\begin{equation}
+f_2(t)=(b-a)+2t\ln\left|\frac{b-t}{a-t}\right|
++t^2\left(\frac1{a-t}-\frac1{b-t}\right).
+\end{equation}
+两式均为有限部分意义下的正确结果。本实验取 $a=-1,b=1$。对于二次解，Taylor 正则积分为 $2$，端点公式中的导数差积分为 $4$；二者与各自边界项组合后得到相同的完整算子。
+
+两种解析解分别采用正确端点公式和完整 Taylor 公式训练。表\ref{tab:monomial_results}的两列分别对应 $\mathcal H_{\mathrm E}[u]=f_j(t)$ 与 $\mathcal H_{\mathrm T}[u]=f_j(t)$，其中 $j=1,2$，误差统计区间均为 $[-1,1]$。
+
+\begin{table}[H]
+\centering
+\caption{线性与二次单项式中两个正确公式的解 RMSE 对照}
+\label{tab:monomial_results}
+\begin{tabular}{ccc}
+\toprule
+解析解 & 正确端点 $\mathcal H_{\mathrm E}$ & 完整 Taylor $\mathcal H_{\mathrm T}$\\
+\midrule
+$u=t$ & \best{$1.3951\times10^{-5}$} & $1.5076\times10^{-5}$\\
+$u=t^2$ & \best{$2.1594\times10^{-5}$} & $2.3764\times10^{-5}$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+两个算例中，正确端点公式得到的 RMSE 略小，均以灰底粗体标出；四个结果整体均处于 $10^{-5}$ 量级。图\ref{fig:monomials}给出完整区间误差曲线。
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.96\textwidth]{monomial_solution_errors.png}
+\caption{线性与二次单项式直接方程的完整区间预测误差。}
+\label{fig:monomials}
+\end{figure}
+
+\section{综合讨论}
+
+\subsection{公式正确性与优化误差应分开判断}
+
+连续公式是否等价，应首先依据解析推导判断；两个独立网络最终 RMSE 的大小还受到初始化、舍入误差和非凸优化路径影响。二次、三次及单项式实验中，两种正确方法没有稳定的精度排序，因此训练分叉不能解释为公式不等价。
+
+\subsection{端点值修正不可遗漏}
+
+式\eqref{eq:endpoint}中的 $u(-1)$ 和 $u(1)$ 来自分部积分边界项。把它们替换成 $u(t)$ 后得到的式\eqref{eq:uncorrected}只在特殊函数上与正确算子一致。随着奇异阶数提高，端点公式还需要更高阶导数的端点值；三次核已同时包含 $u(\pm1)$ 与 $u'(\pm1)$。
+
+\subsection{统一采用解 RMSE 评价}
+
+训练损失的数值受端点平衡因子和参数缩放影响，不能在不同实验组之间直接比较。因此，各组结果表只保留解 RMSE：同一参数只占一行，两种公式分别占一列，对应训练方程在表前统一给出，误差统计区间在表题或表头注明。灰底粗体仅标识同一行中数值较小的 RMSE，不作为连续公式优劣的判据。未修正公式即使能够完成优化，也不代表它满足正确的有限部分积分方程。
+
+% \section{结论与后续工作}
+
+% 本阶段实验得到以下结论：
+% \begin{enumerate}
+% \item 正确端点公式和完整 Taylor 消去公式在连续意义下等价；二阶核的同一网络交叉误差通常达到 $10^{-10}$ 至 $10^{-9}$。
+% \item 端点公式的首项必须使用 $u(-1)$ 和 $u(1)$。遗漏端点修正的导数差商公式不适用于一般函数。
+% \item 二次和三次解析解实验表明，两个正确公式没有稳定的精度排序；独立训练差异主要由优化路径决定。
+% \item 一次核和三次核均可由统一公式推广。一次核需要改进对数奇性求积，三次核需要处理高阶差商的浮点相消。
+% \item 直接单项式方程中，$u=t$ 和 $u=t^2$ 的全区间解 RMSE 均达到 $10^{-5}$ 量级，验证了公式与实现的一致性。
+% \item 所有正式实验均完成相同随机种子的确定性复跑；当前自动测试共 35 项，全部通过。
+% \end{enumerate}
+
+% 下一阶段建议从三个方向继续推进：其一，为一次核引入专门的对数权求积；其二，对三次核增加随机种子与网络宽度实验，区分优化误差和条件数影响；其三，在缺少解析解的实际方程上增加网格加密、求积加密和独立残差检验，形成可报告的数值收敛证据。
+
+% \section*{说明}
+
+% 本报告只汇总已经完成并复跑的数值实验。结论限定于所列方程、网络结构、求积规则和训练配置，不替代有限部分积分方程的严格适定性与收敛性证明。
+
+\end{document}

@@ -1,0 +1,37 @@
+{
+  "method": "chebyshev_taylor_collocation",
+  "status": "ok",
+  "config": {
+    "order": 4,
+    "family": "exp",
+    "coupling": 0.05,
+    "nonlinear_coefficient": 0.0,
+    "degree": 20,
+    "collocation_points": 28,
+    "quadrature_points": 160,
+    "rhs_quadrature_points": 192,
+    "validation_points": 161,
+    "validation_quadrature_points": 192,
+    "validation_limit": 0.98,
+    "continuation_order": 2,
+    "threshold_mode": "balanced",
+    "near_diagonal_threshold": null,
+    "threshold_multiplier": 1.0,
+    "rhs_continuation_order": 3,
+    "rhs_threshold_multiplier": 1.0,
+    "dtype": "float64"
+  },
+  "parameter_count": 21,
+  "training_seconds": 0.3025796659931075,
+  "end_to_end_seconds": 0.7355496250092983,
+  "linear_fit_residual_rmse": 5.402376638154766e-14,
+  "solution_rmse_closed_interval": 3.7018192990194913e-14,
+  "solution_max_abs_error_closed_interval": 2.4913404672588513e-13,
+  "validation_residual_rmse": 3.2992880246062615e-12,
+  "residual_interval": [
+    -0.98,
+    0.98
+  ],
+  "validation_point_count": 161,
+  "validation_quadrature_points": 192
+}

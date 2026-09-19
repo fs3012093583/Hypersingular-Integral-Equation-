@@ -1,0 +1,236 @@
+{
+  "experiment": "endpoint_factored_first_derivative_cauchy_chain",
+  "exact_solution": "exp(t)",
+  "orders": [
+    2,
+    3,
+    4
+  ],
+  "config": {
+    "seed": 20260918,
+    "adam_steps": 1800,
+    "learning_rate": 0.002,
+    "lbfgs_steps": 180,
+    "width": 32,
+    "hidden_layers": 3,
+    "collocation_points": 64,
+    "training_quadrature": 64,
+    "validation_quadrature": 192,
+    "collocation_limit": 0.97,
+    "coupling": 0.05,
+    "regular_constraint_weight": 1.0,
+    "chain_constraint_weight": 1.0
+  },
+  "metrics": [
+    {
+      "order": 2,
+      "elapsed_seconds": 4.804639750000206,
+      "parameter_count": 4451,
+      "final_total_loss": 0.0030964464753881313,
+      "final_equation_loss": 0.0018293612482600493,
+      "final_regular_loss": 0.0007663149860507854,
+      "final_chain_loss": 0.0005007702410772968,
+      "solution_rms_error": 0.07443951198270111,
+      "solution_max_abs_error": 0.1926711630332787,
+      "cauchy_transform_rms_error": 0.2543212352031016,
+      "history": [
+        {
+          "stage": "adam",
+          "step": 1,
+          "total_loss": 2.288713266268597,
+          "equation_loss": 1.9729297479626449,
+          "regular_loss": 0.1971249322081594,
+          "chain_loss": 0.11865858609779267
+        },
+        {
+          "stage": "adam",
+          "step": 300,
+          "total_loss": 0.18519079682499137,
+          "equation_loss": 0.12622322704958366,
+          "regular_loss": 0.036929257552151096,
+          "chain_loss": 0.02203831222325662
+        },
+        {
+          "stage": "adam",
+          "step": 600,
+          "total_loss": 0.08531384851036862,
+          "equation_loss": 0.051069471450391604,
+          "regular_loss": 0.026219720193405262,
+          "chain_loss": 0.008024656866571753
+        },
+        {
+          "stage": "adam",
+          "step": 900,
+          "total_loss": 0.05316723407657517,
+          "equation_loss": 0.030153953099584335,
+          "regular_loss": 0.017320006569388913,
+          "chain_loss": 0.005693274407601923
+        },
+        {
+          "stage": "adam",
+          "step": 1200,
+          "total_loss": 0.038624556149692235,
+          "equation_loss": 0.020724650894802115,
+          "regular_loss": 0.013416128604833637,
+          "chain_loss": 0.00448377665005648
+        },
+        {
+          "stage": "adam",
+          "step": 1500,
+          "total_loss": 0.030648699929229008,
+          "equation_loss": 0.015833644007879018,
+          "regular_loss": 0.01115342146978736,
+          "chain_loss": 0.003661634451562631
+        },
+        {
+          "stage": "adam",
+          "step": 1800,
+          "total_loss": 0.02704051918784504,
+          "equation_loss": 0.012298044869447817,
+          "regular_loss": 0.009247578284291211,
+          "chain_loss": 0.005494896034106012
+        }
+      ]
+    },
+    {
+      "order": 3,
+      "elapsed_seconds": 5.408748207992176,
+      "parameter_count": 4484,
+      "final_total_loss": 0.010251268268475557,
+      "final_equation_loss": 0.004542512998703528,
+      "final_regular_loss": 0.003960291035589678,
+      "final_chain_loss": 0.00174846423418235,
+      "solution_rms_error": 0.08830387324366737,
+      "solution_max_abs_error": 0.40372347242211504,
+      "cauchy_transform_rms_error": 0.28968147146168777,
+      "history": [
+        {
+          "stage": "adam",
+          "step": 1,
+          "total_loss": 1.6305498541277035,
+          "equation_loss": 1.6130115660341826,
+          "regular_loss": 0.008827629166349483,
+          "chain_loss": 0.008710658927171405
+        },
+        {
+          "stage": "adam",
+          "step": 300,
+          "total_loss": 0.1797110964787274,
+          "equation_loss": 0.12765048677000032,
+          "regular_loss": 0.018362974012318622,
+          "chain_loss": 0.03369763569640845
+        },
+        {
+          "stage": "adam",
+          "step": 600,
+          "total_loss": 0.09352607133852987,
+          "equation_loss": 0.05917471655006941,
+          "regular_loss": 0.021515713312584617,
+          "chain_loss": 0.012835641475875846
+        },
+        {
+          "stage": "adam",
+          "step": 900,
+          "total_loss": 0.06267529879915837,
+          "equation_loss": 0.03355742561275535,
+          "regular_loss": 0.021825115032877793,
+          "chain_loss": 0.00729275815352523
+        },
+        {
+          "stage": "adam",
+          "step": 1200,
+          "total_loss": 0.047639392657382464,
+          "equation_loss": 0.024675279954519902,
+          "regular_loss": 0.017230349205760515,
+          "chain_loss": 0.005733763497102052
+        },
+        {
+          "stage": "adam",
+          "step": 1500,
+          "total_loss": 0.03820173001812656,
+          "equation_loss": 0.01912636858384355,
+          "regular_loss": 0.014389294319501228,
+          "chain_loss": 0.004686067114781783
+        },
+        {
+          "stage": "adam",
+          "step": 1800,
+          "total_loss": 0.033180879529649196,
+          "equation_loss": 0.015677020395680717,
+          "regular_loss": 0.012220975817600892,
+          "chain_loss": 0.005282883316367585
+        }
+      ]
+    },
+    {
+      "order": 4,
+      "elapsed_seconds": 5.651883500002441,
+      "parameter_count": 4517,
+      "final_total_loss": 0.007050208897957861,
+      "final_equation_loss": 0.004421603073876657,
+      "final_regular_loss": 0.0007703195500824773,
+      "final_chain_loss": 0.0018582862739987271,
+      "solution_rms_error": 0.14397152791560838,
+      "solution_max_abs_error": 0.4843708115284624,
+      "cauchy_transform_rms_error": 0.4322968230893241,
+      "history": [
+        {
+          "stage": "adam",
+          "step": 1,
+          "total_loss": 2.2365281896552456,
+          "equation_loss": 2.0756427013347216,
+          "regular_loss": 0.11218869121789041,
+          "chain_loss": 0.04869679710263395
+        },
+        {
+          "stage": "adam",
+          "step": 300,
+          "total_loss": 0.18902589254470795,
+          "equation_loss": 0.12341437739318364,
+          "regular_loss": 0.014734462253510813,
+          "chain_loss": 0.0508770528980135
+        },
+        {
+          "stage": "adam",
+          "step": 600,
+          "total_loss": 0.1190720817026475,
+          "equation_loss": 0.0782237556520326,
+          "regular_loss": 0.019110722861171513,
+          "chain_loss": 0.021737603189443382
+        },
+        {
+          "stage": "adam",
+          "step": 900,
+          "total_loss": 0.07854429823201245,
+          "equation_loss": 0.048365566474177835,
+          "regular_loss": 0.011440266297776749,
+          "chain_loss": 0.01873846546005786
+        },
+        {
+          "stage": "adam",
+          "step": 1200,
+          "total_loss": 0.047679922889716474,
+          "equation_loss": 0.02860373019991342,
+          "regular_loss": 0.011180128805645352,
+          "chain_loss": 0.007896063884157698
+        },
+        {
+          "stage": "adam",
+          "step": 1500,
+          "total_loss": 0.033141746736055494,
+          "equation_loss": 0.019058512646613027,
+          "regular_loss": 0.009168356255984202,
+          "chain_loss": 0.004914877833458263
+        },
+        {
+          "stage": "adam",
+          "step": 1800,
+          "total_loss": 0.02439848754300552,
+          "equation_loss": 0.014009369496812883,
+          "regular_loss": 0.006385226085015169,
+          "chain_loss": 0.004003891961177466
+        }
+      ]
+    }
+  ]
+}

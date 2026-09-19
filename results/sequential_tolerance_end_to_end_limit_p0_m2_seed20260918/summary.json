@@ -1,0 +1,308 @@
+{
+  "experiment": "sequential_tolerance_end_to_end",
+  "comparison_contract": {
+    "matched": [
+      "initial weights",
+      "collocation points",
+      "quadrature rules",
+      "manufactured right-hand side",
+      "Adam and L-BFGS settings",
+      "canonical validation operator"
+    ],
+    "sequential_training_time_includes_online_envelope_refresh": true,
+    "memory_metric": "autograd saved-tensor payload for one full residual forward-backward pass"
+  },
+  "records": [
+    {
+      "experiment": "sequential_tolerance_end_to_end",
+      "method": "sequential",
+      "status": "ok",
+      "config": {
+        "representation": "sequential",
+        "order": 2,
+        "family": "exp",
+        "coupling": 0.05,
+        "nonlinear_coefficient": 0.0,
+        "seed": 20260918,
+        "steps": 600,
+        "lbfgs_steps": 60,
+        "learning_rate": 0.002,
+        "width": 32,
+        "hidden_layers": 3,
+        "collocation_points": 48,
+        "training_quadrature_points": 64,
+        "rhs_quadrature_points": 192,
+        "validation_points": 161,
+        "validation_quadrature_points": 192,
+        "collocation_limit": 0.95,
+        "validation_limit": 0.98,
+        "max_continuation_order": 0,
+        "target_error": 0.001,
+        "derivative_envelope_safety": 4.0,
+        "envelope_refresh_interval": 100,
+        "envelope_calibration_points": 65,
+        "selector_batch_size": 48,
+        "derivative_metrics_path": "results/neural_high_order_derivatives/metrics.json",
+        "rhs_continuation_order": 3,
+        "dtype": "float64",
+        "timing_repeats": 3
+      },
+      "initial_model_fingerprint": "ea9f451630a5163092f286668a9607f63c47bfa41ba70bf58e61da908369c096",
+      "parameter_count": 2209,
+      "final_training_loss": 3.176348285376874e-08,
+      "loss_history": [
+        {
+          "stage": "adam",
+          "step": 1,
+          "loss": 2.000155230333847
+        },
+        {
+          "stage": "adam",
+          "step": 100,
+          "loss": 0.01800848955249757
+        },
+        {
+          "stage": "adam",
+          "step": 200,
+          "loss": 0.0005540350511147844
+        },
+        {
+          "stage": "adam",
+          "step": 300,
+          "loss": 0.00015127473493794187
+        },
+        {
+          "stage": "adam",
+          "step": 400,
+          "loss": 0.00010569823453868931
+        },
+        {
+          "stage": "adam",
+          "step": 500,
+          "loss": 8.640089408138475e-05
+        },
+        {
+          "stage": "adam",
+          "step": 600,
+          "loss": 7.680181267787657e-05
+        },
+        {
+          "stage": "lbfgs",
+          "step": 74,
+          "loss": 3.176348285376874e-08
+        }
+      ],
+      "lbfgs_closure_calls": 74,
+      "solution_rmse_closed_interval": 0.0008472213165872645,
+      "solution_max_abs_error_closed_interval": 0.003537049623554278,
+      "validation_residual_rmse": 0.00039573783369364803,
+      "residual_interval": [
+        -0.98,
+        0.98
+      ],
+      "training_seconds_including_envelope_refresh": 1.1122137079946697,
+      "end_to_end_seconds": 1.6650026249990333,
+      "post_training_cost": {
+        "median_residual_forward_backward_seconds": 0.0016930420097196475,
+        "median_saved_tensor_payload_bytes": 849920
+      },
+      "selection_diagnostics": {
+        "selected_counts": {
+          "-1": 3072
+        },
+        "direct_fraction": 1.0,
+        "mean_selected_local_order": null,
+        "highest_derivative_order": 1,
+        "maximum_selected_error_estimate": 4.220220240580467e-07,
+        "active_row_counts_by_local_order": []
+      },
+      "derivative_error_scaled_envelope": {
+        "0": 8.326672684688674e-17,
+        "1": 5.551115123125783e-17,
+        "2": 2.7755575615628914e-17,
+        "3": 8.326672684688674e-17,
+        "4": 1.6653345369377348e-16,
+        "5": 4.440892098500626e-16,
+        "6": 9.992007221626409e-16,
+        "7": 1.1950440527136514e-15,
+        "8": 2.0386851715860886e-15,
+        "9": 3.0647120669943083e-15,
+        "10": 5.919301586547934e-15
+      },
+      "online_derivative_envelope_refreshes": [
+        {
+          "stage": "initial",
+          "step": 0,
+          "observed_max_abs_derivative": {
+            "0": 0.16025768703762883,
+            "1": 0.08013933348352413,
+            "2": 0.11025868845191503,
+            "3": 0.17515451903324997
+          },
+          "active_bound": {
+            "0": 0.6410307481505153,
+            "1": 0.3205573339340965,
+            "2": 0.4410347538076601,
+            "3": 0.7006180761329999
+          },
+          "violations_of_previous_bound": [],
+          "refresh_seconds": 0.001091124999220483
+        },
+        {
+          "stage": "adam",
+          "step": 100,
+          "observed_max_abs_derivative": {
+            "0": 2.2983327795593422,
+            "1": 1.1971497867757366,
+            "2": 1.1049593520006566,
+            "3": 2.3331165140013965
+          },
+          "active_bound": {
+            "0": 9.193331118237369,
+            "1": 4.788599147102946,
+            "2": 4.419837408002627,
+            "3": 9.332466056005586
+          },
+          "violations_of_previous_bound": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "refresh_seconds": 0.000857459002872929
+        },
+        {
+          "stage": "adam",
+          "step": 200,
+          "observed_max_abs_derivative": {
+            "0": 2.5693641674869814,
+            "1": 1.933180746330132,
+            "2": 2.731433505948126,
+            "3": 12.234700975800882
+          },
+          "active_bound": {
+            "0": 10.277456669947926,
+            "1": 7.732722985320528,
+            "2": 10.925734023792504,
+            "3": 48.93880390320353
+          },
+          "violations_of_previous_bound": [
+            3
+          ],
+          "refresh_seconds": 0.0008342910005012527
+        },
+        {
+          "stage": "adam",
+          "step": 300,
+          "observed_max_abs_derivative": {
+            "0": 2.6213560577305572,
+            "1": 2.0987707700329477,
+            "2": 3.1347515174522127,
+            "3": 15.014400280217199
+          },
+          "active_bound": {
+            "0": 10.485424230922229,
+            "1": 8.39508308013179,
+            "2": 12.53900606980885,
+            "3": 60.057601120868796
+          },
+          "violations_of_previous_bound": [],
+          "refresh_seconds": 0.0008126669999910519
+        },
+        {
+          "stage": "adam",
+          "step": 400,
+          "observed_max_abs_derivative": {
+            "0": 2.6353453533252997,
+            "1": 2.1281438669762207,
+            "2": 3.1603406302131507,
+            "3": 15.341103346875704
+          },
+          "active_bound": {
+            "0": 10.541381413301199,
+            "1": 8.512575467904883,
+            "2": 12.641362520852603,
+            "3": 61.364413387502815
+          },
+          "violations_of_previous_bound": [],
+          "refresh_seconds": 0.0008166250045178458
+        },
+        {
+          "stage": "adam",
+          "step": 500,
+          "observed_max_abs_derivative": {
+            "0": 2.6444624274682336,
+            "1": 2.1479085020486623,
+            "2": 3.1496576958540556,
+            "3": 15.534435866144348
+          },
+          "active_bound": {
+            "0": 10.577849709872934,
+            "1": 8.59163400819465,
+            "2": 12.641362520852603,
+            "3": 62.13774346457739
+          },
+          "violations_of_previous_bound": [],
+          "refresh_seconds": 0.0008014160121092573
+        },
+        {
+          "stage": "pre_lbfgs",
+          "step": 600,
+          "observed_max_abs_derivative": {
+            "0": 2.650575210970513,
+            "1": 2.163812935432202,
+            "2": 3.121248523913436,
+            "3": 15.627013911395881
+          },
+          "active_bound": {
+            "0": 10.602300843882052,
+            "1": 8.655251741728808,
+            "2": 12.641362520852603,
+            "3": 62.508055645583525
+          },
+          "violations_of_previous_bound": [],
+          "refresh_seconds": 0.0008606250048615038
+        },
+        {
+          "stage": "final",
+          "step": 600,
+          "observed_max_abs_derivative": {
+            "0": 2.714744778835491,
+            "1": 2.63161004392017,
+            "2": 2.13397881466332,
+            "3": 5.731908625800681
+          },
+          "active_bound": {
+            "0": 10.858979115341963,
+            "1": 10.52644017568068,
+            "2": 12.641362520852603,
+            "3": 62.508055645583525
+          },
+          "violations_of_previous_bound": [],
+          "refresh_seconds": 0.000759959002607502
+        }
+      ],
+      "online_derivative_envelope_refresh_seconds": 0.0068341670266818255
+    }
+  ],
+  "summary": [
+    {
+      "method": "sequential",
+      "order": 2,
+      "family": "exp",
+      "dtype": "float64",
+      "runs": 1,
+      "successes": 1,
+      "failure_rate": 0.0,
+      "solution_rmse_closed_interval_mean": 0.0008472213165872645,
+      "solution_rmse_closed_interval_std": 0.0,
+      "validation_residual_rmse_mean": 0.00039573783369364803,
+      "validation_residual_rmse_std": 0.0,
+      "training_seconds_including_envelope_refresh_mean": 1.1122137079946697,
+      "training_seconds_including_envelope_refresh_std": 0.0,
+      "end_to_end_seconds_mean": 1.6650026249990333,
+      "end_to_end_seconds_std": 0.0,
+      "median_saved_tensor_payload_bytes_mean": 849920.0
+    }
+  ]
+}

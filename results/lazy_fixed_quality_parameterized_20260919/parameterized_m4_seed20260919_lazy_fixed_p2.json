@@ -1,0 +1,117 @@
+{
+  "experiment": "parameterized_operator_budget_benchmark",
+  "status": "ok",
+  "method": "lazy_fixed_p2",
+  "config": {
+    "representation": "lazy_fixed_p2",
+    "order": 4,
+    "coupling": 0.05,
+    "seed": 20260919,
+    "steps": 300,
+    "lbfgs_steps": 30,
+    "learning_rate": 0.002,
+    "width": 24,
+    "hidden_layers": 3,
+    "collocation_points": 32,
+    "training_quadrature_points": 48,
+    "rhs_quadrature_points": 128,
+    "validation_points": 121,
+    "validation_quadrature_points": 160,
+    "collocation_limit": 0.95,
+    "validation_limit": 0.98,
+    "training_parameters": [
+      0.5,
+      1.0,
+      1.5
+    ],
+    "validation_parameters": [
+      0.625,
+      0.875,
+      1.125,
+      1.375
+    ],
+    "max_continuation_order": 3,
+    "target_residual_error": 0.0001,
+    "derivative_envelope_safety": 4.0,
+    "derivative_error_safety": 8.0,
+    "envelope_refresh_interval": 100,
+    "envelope_calibration_points": 33,
+    "rhs_continuation_order": 3,
+    "timing_repeats": 3,
+    "dtype": "float64",
+    "device": "cpu"
+  },
+  "initial_model_fingerprint": "31e6cd61e5d06f9806b9f09cc7bfaab457012df0c89e48df005bcb454ec32f9f",
+  "parameter_count": 1297,
+  "final_training_loss": 0.00012256669364663216,
+  "loss_history": [
+    {
+      "stage": "adam",
+      "step": 1,
+      "loss": 1.9914612874554383
+    },
+    {
+      "stage": "adam",
+      "step": 100,
+      "loss": 0.1683063175395757
+    },
+    {
+      "stage": "adam",
+      "step": 200,
+      "loss": 0.01783459381550014
+    },
+    {
+      "stage": "adam",
+      "step": 300,
+      "loss": 0.0036034252086162067
+    }
+  ],
+  "lbfgs_closure_calls": 31,
+  "heldout_solution_rmse": 0.02675010491139352,
+  "heldout_residual_rmse": 0.02764431909960952,
+  "heldout_solution_rmse_by_parameter": {
+    "0.625": 0.0250473060601898,
+    "0.875": 0.018475656489540877,
+    "1.125": 0.026470439309008845,
+    "1.375": 0.03453796274070002
+  },
+  "heldout_residual_rmse_by_parameter": {
+    "0.625": 0.023817633085253906,
+    "0.875": 0.017898629137602973,
+    "1.125": 0.027625420204413668,
+    "1.375": 0.03749705457318594
+  },
+  "solution_interval": [
+    -1.0,
+    1.0
+  ],
+  "residual_interval": [
+    -0.98,
+    0.98
+  ],
+  "training_seconds_including_envelope_refresh": 25.10344750000513,
+  "method_setup_seconds": 5.409965524449944e-07,
+  "method_setup_and_training_seconds": 25.103448041001684,
+  "solve_seconds_before_validation": 25.10817695800506,
+  "offline_ad_calibration_seconds": 0.0,
+  "post_training_cost": {
+    "median_residual_forward_backward_seconds": 0.1042347089969553,
+    "median_saved_tensor_payload_bytes": 36020448
+  },
+  "selection_diagnostics": null,
+  "derivative_error_scaled_envelope": null,
+  "online_derivative_envelope_refreshes": null,
+  "online_derivative_envelope_refresh_seconds": 0.0,
+  "task": "parameterized",
+  "fixed_p2_geometry": {
+    "fixed_p2_threshold": 0.011609330383882413,
+    "near_pairs": 20,
+    "total_pairs": 1536,
+    "near_rows": 20,
+    "total_rows": 32,
+    "minimum_distance": 0.002509143231948674
+  },
+  "solution_rmse": 0.02675010491139352,
+  "residual_rmse": 0.02764431909960952,
+  "saved_tensor_payload_bytes": 36020448
+}
